@@ -697,12 +697,12 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
               </div>
               <div style={{ fontSize: ".9rem", color: DC.dim, marginBottom: "2rem", lineHeight: 1.7, maxWidth: 460, margin: "0 auto 2rem" }}>
                 {lang === "en"
-                  ? "Your personal AI Mentor, available 24/7. Everything I say is based on how you actually work — not generic management advice."
-                  : "Tu AI Mentor personal, disponible 24/7. Todo lo que te digo está basado en cómo funcionás vos — no en consejos genéricos de management."}
+                  ? "I'm your personal AI Mentor. All my responses are filtered through your biological design. I won't give you generic management advice or tell you what to do. I'm designed to help you make decisions based on your own nature."
+                  : "Soy tu AI Mentor personal. Todas mis respuestas están filtradas según tu diseño biológico. No voy a darte consejos genéricos de management ni decirte qué hacer. Estoy diseñado para ayudarte a tomar decisiones en función de tu propia naturaleza."}
               </div>
               <button onClick={startSession}
                 style={{ background: DC.gold, color: DC.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2.5em", cursor: "pointer", textTransform: "uppercase", marginBottom: "2rem" }}>
-                {lang === "en" ? "Start my session" : "Iniciar mi sesión"}
+                {lang === "en" ? "Start" : "Empezar"}
               </button>
               <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem", justifyContent: "center" }}>
                 {CHIPS.map(c => (
@@ -747,7 +747,7 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
         <div style={{ padding: "1rem 0 1.5rem", borderTop: "1px solid rgba(184,154,78,.15)", display: "flex", gap: ".8rem", alignItems: "flex-end" }}>
           <textarea style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid ${DC.gold}40`, color: DC.txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", minHeight: "2rem", lineHeight: 1.5 }}
             value={input}
-            placeholder={lang === "en" ? "What's on your mind?" : "¿Qué tenés en la cabeza?"}
+            placeholder={lang === "en" ? "What's on your mind?" : "¿De qué hablamos?"}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} rows={1} />
           <button onClick={() => send()} disabled={loading || !input.trim()}
