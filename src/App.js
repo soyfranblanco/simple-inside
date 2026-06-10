@@ -265,18 +265,13 @@ function Welcome({ go, lang, setLang }) {
       </div>
       <div style={logo}>INSIDE</div>
       <div style={{ textAlign: "center", maxWidth: 580 }}>
-        <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "1rem", fontFamily: GEORGIA }}>
-          {lang === "en"
-            ? <>We are unique.<br /><span style={{ color: C.gold, fontStyle: "italic" }}>Our way of deciding, too.</span></>
-            : <>Somos únicos.<br /><span style={{ color: C.gold, fontStyle: "italic" }}>Nuestra forma de decidir, también.</span></>}
-        </div>
-        <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", color: C.gold, textTransform: "uppercase", marginBottom: ".8rem" }}>
+        <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: C.gold, textTransform: "uppercase", marginBottom: "1.2rem" }}>
           {lang === "en" ? "THIS IS SIMPLE INSIDE" : "ESTO ES SIMPLE INSIDE"}
         </div>
-        <div style={{ color: C.dim, fontSize: "1rem", lineHeight: 1.8, maxWidth: 480, margin: "0 auto 2.5rem", fontFamily: NUNITO }}>
+        <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "2.5rem", fontFamily: GEORGIA }}>
           {lang === "en"
-            ? "The first AI Mentor trained with your biological design."
-            : "El primer AI Mentor entrenado con tu diseño biológico."}
+            ? <>The first AI Mentor trained<br /><span style={{ color: C.gold, fontStyle: "italic" }}>with your biological design.</span></>
+            : <>El primer AI Mentor entrenado<br /><span style={{ color: C.gold, fontStyle: "italic" }}>con tu diseño biológico.</span></>}
         </div>
         <div style={{ maxWidth: 300, margin: "0 auto", display: "flex", flexDirection: "column", gap: ".8rem" }}>
           <button onClick={() => go("register")} style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>
