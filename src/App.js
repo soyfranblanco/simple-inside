@@ -265,19 +265,22 @@ function Welcome({ go, lang, setLang }) {
       </div>
       <div style={logo}>INSIDE</div>
       <div style={{ textAlign: "center", maxWidth: 580 }}>
-        <div style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", fontWeight: 300, lineHeight: 1.25, marginBottom: "1.4rem", fontFamily: GEORGIA }}>
+        <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "1rem", fontFamily: GEORGIA }}>
           {lang === "en"
-            ? <>Stop making decisions<br /><span style={{ color: C.gold, fontStyle: "italic" }}>alone.</span></>
-            : <>Dejá de tomar decisiones<br /><span style={{ color: C.gold, fontStyle: "italic" }}>en soledad.</span></>}
+            ? <>We are unique.<br /><span style={{ color: C.gold, fontStyle: "italic" }}>Our way of deciding, too.</span></>
+            : <>Somos únicos.<br /><span style={{ color: C.gold, fontStyle: "italic" }}>Nuestra forma de decidir, también.</span></>}
+        </div>
+        <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", color: C.gold, textTransform: "uppercase", marginBottom: ".8rem" }}>
+          {lang === "en" ? "THIS IS SIMPLE INSIDE" : "ESTO ES SIMPLE INSIDE"}
         </div>
         <div style={{ color: C.dim, fontSize: "1rem", lineHeight: 1.8, maxWidth: 480, margin: "0 auto 2.5rem", fontFamily: NUNITO }}>
           {lang === "en"
-            ? "The only AI Mentor trained according to your way of leading."
-            : "El único AI Mentor entrenado según tu forma de liderar."}
+            ? "The first AI Mentor trained with your biological design."
+            : "El primer AI Mentor entrenado con tu diseño biológico."}
         </div>
         <div style={{ maxWidth: 300, margin: "0 auto", display: "flex", flexDirection: "column", gap: ".8rem" }}>
           <button onClick={() => go("register")} style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>
-            {lang === "en" ? "Request access" : "Solicitar acceso"}
+            {lang === "en" ? "Create account" : "Crear cuenta"}
           </button>
           <button onClick={() => go("login")} style={{ background: "transparent", color: C.dim, border: "1px solid rgba(184,154,78,.3)", fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>
             {lang === "en" ? "I already have an account" : "Ya tengo cuenta"}
@@ -293,72 +296,145 @@ function Welcome({ go, lang, setLang }) {
 
 // ── REGISTER ──────────────────────────────────────────────────────────────────
 function Register({ go, lang }) {
-  const [f, setF] = useState({ nom: "", ape: "", email: "", fecha: "", hora: "", lugar: "", pass: "", tyc: false });
+  const [step, setStep] = useState(1);
+  const [f, setF] = useState({ nom: "", ape: "", email: "", pass: "", fecha: "", hora: "", lugar: "", tyc: false });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showTyC, setShowTyC] = useState(false);
   const u = (k, v) => setF(p => ({ ...p, [k]: v }));
 
-  async function ok() {
-    if (!f.nom || !f.ape || !f.email || !f.fecha || !f.hora || !f.lugar || !f.pass) { setErr("Completá todos los campos obligatorios."); return; }
-    if (!f.tyc) { setErr("Aceptá los términos y condiciones para continuar."); return; }
+  function calcularEdad(fecha) {
+    if (!fecha) return null;
+    const hoy = new Date();
+    const nac = new Date(fecha);
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+    return edad;
+  }
+
+  function okStep1() {
+    if (!f.nom || !f.ape || !f.email || !f.pass) { setErr(lang === "en" ? "Please fill all fields." : "Completá todos los campos."); return; }
+    if (!f.tyc) { setErr(lang === "en" ? "Please accept the terms and conditions." : "Aceptá los términos y condiciones para continuar."); return; }
+    setErr(""); setStep(2);
+  }
+
+  async function okStep2() {
+    if (!f.fecha || !f.hora || !f.lugar) { setErr(lang === "en" ? "Please fill all fields." : "Completá todos los campos."); return; }
+    const edad = calcularEdad(f.fecha);
+    if (edad !== null && edad < 18) {
+      setErr(lang === "en" ? "SIMPLE INSIDE is designed exclusively for users over 18 years old." : "SIMPLE INSIDE es una herramienta diseñada exclusivamente para mayores de 18 años.");
+      return;
+    }
     setLoading(true); setErr("");
     try {
       const hdR = await fetch("/api/hd", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: f.nom, apellido: f.ape, birth_date: f.fecha, birth_time: f.hora, ciudad: f.lugar }) });
       const diseno = await hdR.json();
       if (diseno.error) { setErr("Error al calcular tu diseño: " + diseno.error); setLoading(false); return; }
-
       const { error: authError } = await supabase.auth.signUp({
         email: f.email.toLowerCase().trim(),
         password: f.pass,
         options: { emailRedirectTo: "https://inside.metodosimple.ar", data: { nombre: f.nom, apellido: f.ape } }
       });
-
       if (authError) {
-        setErr(authError.message.includes("already registered") ? "Ese email ya está registrado. Ingresá con tu contraseña." : authError.message);
+        setErr(authError.message.includes("already registered") ? (lang === "en" ? "That email is already registered." : "Ese email ya está registrado. Ingresá con tu contraseña.") : authError.message);
         setLoading(false); return;
       }
-
       await apiUsuarios({ action: "insert", fields: { email: f.email.toLowerCase().trim(), nombre: f.nom, apellido: f.ape, password_hash: f.pass, diseno } });
       go("pending", f.email.toLowerCase().trim());
     } catch (e) { setErr("Error: " + (e?.message || "No se pudo conectar.")); }
     setLoading(false);
   }
 
+  const TyCModal = () => (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+      <div style={{ background: "#111", border: "1px solid rgba(184,154,78,.3)", borderRadius: 16, width: "min(600px,100%)", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid rgba(184,154,78,.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: C.gold, textTransform: "uppercase" }}>Términos y Condiciones</div>
+          <button onClick={() => setShowTyC(false)} style={{ background: "none", border: "none", color: C.dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
+        </div>
+        <div style={{ padding: "1.5rem 2rem", overflowY: "auto", fontFamily: NUNITO, fontSize: ".85rem", color: C.dim, lineHeight: 1.8 }}>
+          <p style={{ color: C.txt, fontWeight: 600, marginBottom: ".5rem" }}>SIMPLE INSIDE — Términos y Condiciones</p>
+          <p style={{ marginBottom: "1rem", fontSize: ".75rem" }}>Última actualización: junio de 2026</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>1. Qué es y qué no es SIMPLE INSIDE</strong><br/>SIMPLE INSIDE es un espacio para conocer aspectos de tu personalidad, explorar tu forma de tomar decisiones y reflexionar sobre situaciones de liderazgo. No es un servicio de salud mental, no es terapia y no reemplaza el acompañamiento de un profesional.</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>2. Edad mínima</strong><br/>SIMPLE INSIDE está diseñada exclusivamente para mayores de 18 años.</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>3. Datos que recopilamos</strong><br/>Nombre, apellido, email y datos de nacimiento para personalizar tu experiencia. El contenido de tus conversaciones se procesa a través de la API de Anthropic (Claude) para generar respuestas. No usamos tus datos para entrenar modelos de IA. No vendemos ni compartimos tus datos con terceros.</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>4. Privacidad</strong><br/>Tus conversaciones son privadas — solo vos tenés acceso a ellas. Los datos se almacenan de forma segura en Supabase con cifrado en tránsito y control de acceso por usuario.</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>5. Retención de datos</strong><br/>Al eliminar tu cuenta, todos tus datos personales serán eliminados dentro de los 60 días siguientes. Si tu suscripción vence y no es renovada, el historial se conserva por 60 días y luego se elimina de forma permanente.</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>6. Servicios de terceros</strong><br/>Usamos Supabase para la base de datos y Anthropic (Claude) para el procesamiento de IA. Ambos operan bajo sus propias políticas de privacidad.</p>
+          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>7. Contacto</strong><br/>soyfranblanco@gmail.com · inside.metodosimple.ar</p>
+          <p style={{ fontSize: ".72rem", color: "rgba(240,235,224,.3)" }}>© 2026 SIMPLE SRL. Todos los derechos reservados.</p>
+        </div>
+        <div style={{ padding: "1rem 2rem", borderTop: "1px solid rgba(184,154,78,.15)" }}>
+          <button onClick={() => { u("tyc", true); setShowTyC(false); }}
+            style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".25em", padding: ".7em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>
+            {lang === "en" ? "Accept and continue" : "Aceptar y continuar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto" }}>
+      {showTyC && <TyCModal />}
       <div style={logo}>INSIDE</div>
       <div style={{ width: "100%", maxWidth: 420 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: ".4rem", marginBottom: "1.5rem" }}>
+          {[1, 2].map(s => (
+            <div key={s} style={{ width: 28, height: 4, borderRadius: 2, background: step >= s ? C.gold : "rgba(184,154,78,.2)", transition: "background .3s" }} />
+          ))}
+        </div>
         <div style={{ fontSize: "1.5rem", fontWeight: 300, textAlign: "center", marginBottom: ".4rem" }}>
-          {lang === "en" ? "Request access" : "Solicitar acceso"}
+          {step === 1 ? (lang === "en" ? "Create account" : "Crear cuenta") : (lang === "en" ? "Your birth data" : "Tus datos de nacimiento")}
         </div>
         <div style={{ color: C.dim, textAlign: "center", marginBottom: "1.5rem", fontSize: ".9rem", lineHeight: 1.6 }}>
-          {lang === "en" ? "Enter your data to calculate your design." : "Ingresá tus datos para calcular tu diseño."}
+          {step === 1
+            ? (lang === "en" ? "Enter your details to get started." : "Ingresá tus datos para empezar.")
+            : (lang === "en" ? "We need this information to analyze your Human Design and provide a 100% personalized experience." : "Necesitamos esta info para analizar tu diseño humano y brindarte una experiencia 100% personalizada.")}
         </div>
         <div style={{ border: "1px solid rgba(184,154,78,.2)", padding: "2.5rem", background: "rgba(255,255,255,.02)", borderRadius: 16 }}>
           {err && <div style={{ color: "#c06040", fontFamily: "monospace", fontSize: ".63rem", marginBottom: ".8rem", textAlign: "center" }}>{err}</div>}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div><label style={lbl}>{lang === "en" ? "First name" : "Nombre"} *</label><input style={inp} placeholder={lang === "en" ? "First name" : "Tu nombre"} value={f.nom} onChange={e => u("nom", e.target.value)} /></div>
-            <div><label style={lbl}>{lang === "en" ? "Last name" : "Apellido"} *</label><input style={inp} placeholder={lang === "en" ? "Last name" : "Tu apellido"} value={f.ape} onChange={e => u("ape", e.target.value)} /></div>
-          </div>
-          <label style={lbl}>Email *</label>
-          <input style={inp} type="email" placeholder="tu@email.com" value={f.email} onChange={e => u("email", e.target.value)} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div><label style={lbl}>{lang === "en" ? "Birth date" : "Fecha"} *</label><input style={{ ...inp, colorScheme: "dark" }} type="date" value={f.fecha} onChange={e => u("fecha", e.target.value)} /></div>
-            <div><label style={lbl}>{lang === "en" ? "Birth time" : "Hora"} *</label><input style={{ ...inp, colorScheme: "dark" }} type="time" value={f.hora} onChange={e => u("hora", e.target.value)} /></div>
-          </div>
-          <label style={lbl}>{lang === "en" ? "City of birth" : "Lugar de nacimiento"} *</label>
-          <CityInput value={f.lugar} onChange={v => u("lugar", v)} placeholder={lang === "en" ? "City, Country" : "Ciudad, País"} />
-          <label style={lbl}>{lang === "en" ? "Password" : "Contraseña"} *</label>
-          <Eye value={f.pass} onChange={e => u("pass", e.target.value)} placeholder={lang === "en" ? "Min. 6 characters" : "Mínimo 6 caracteres"} />
-          <div style={{ display: "flex", alignItems: "flex-start", gap: ".7rem", marginBottom: "1.2rem" }}>
-            <input type="checkbox" id="tyc" checked={f.tyc} onChange={e => u("tyc", e.target.checked)} style={{ marginTop: ".2rem", accentColor: C.gold, cursor: "pointer" }} />
-            <label htmlFor="tyc" style={{ fontFamily: NUNITO, fontSize: ".78rem", color: C.dim, lineHeight: 1.6, cursor: "pointer" }}>
-              {lang === "en" ? "I accept the " : "Acepto los "}<span style={{ color: C.gold }}>{lang === "en" ? "terms and conditions" : "términos y condiciones"}</span>{lang === "en" ? " of SIMPLE INSIDE." : " de uso de SIMPLE INSIDE."}
-            </label>
-          </div>
-          <button onClick={ok} disabled={loading || !f.tyc} style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", opacity: loading || !f.tyc ? 0.5 : 1 }}>
-            {loading ? (lang === "en" ? "Calculating design..." : "Calculando tu diseño...") : (lang === "en" ? "Create account" : "Crear cuenta")}
-          </button>
+          {step === 1 ? (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div><label style={lbl}>{lang === "en" ? "First name" : "Nombre"} *</label><input style={inp} placeholder={lang === "en" ? "First name" : "Tu nombre"} value={f.nom} onChange={e => u("nom", e.target.value)} /></div>
+                <div><label style={lbl}>{lang === "en" ? "Last name" : "Apellido"} *</label><input style={inp} placeholder={lang === "en" ? "Last name" : "Tu apellido"} value={f.ape} onChange={e => u("ape", e.target.value)} /></div>
+              </div>
+              <label style={lbl}>Email *</label>
+              <input style={inp} type="email" placeholder="tu@email.com" value={f.email} onChange={e => u("email", e.target.value)} />
+              <label style={lbl}>{lang === "en" ? "Password" : "Contraseña"} *</label>
+              <Eye value={f.pass} onChange={e => u("pass", e.target.value)} placeholder={lang === "en" ? "Min. 6 characters" : "Mínimo 6 caracteres"} />
+              <div style={{ display: "flex", alignItems: "flex-start", gap: ".7rem", marginBottom: "1.2rem" }}>
+                <input type="checkbox" id="tyc" checked={f.tyc} onChange={e => u("tyc", e.target.checked)} style={{ marginTop: ".2rem", accentColor: C.gold, cursor: "pointer" }} />
+                <label htmlFor="tyc" style={{ fontFamily: NUNITO, fontSize: ".78rem", color: C.dim, lineHeight: 1.6, cursor: "pointer" }}>
+                  {lang === "en" ? "I accept the " : "Acepto los "}
+                  <span onClick={() => setShowTyC(true)} style={{ color: C.gold, cursor: "pointer", textDecoration: "underline" }}>
+                    {lang === "en" ? "terms and conditions" : "términos y condiciones"}
+                  </span>
+                  {lang === "en" ? " of SIMPLE INSIDE." : " de SIMPLE INSIDE."}
+                </label>
+              </div>
+              <button onClick={okStep1} style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>
+                {lang === "en" ? "Continue" : "Continuar"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div><label style={lbl}>{lang === "en" ? "Birth date" : "Fecha"} *</label><input style={{ ...inp, colorScheme: "dark" }} type="date" value={f.fecha} onChange={e => u("fecha", e.target.value)} /></div>
+                <div><label style={lbl}>{lang === "en" ? "Birth time" : "Hora"} *</label><input style={{ ...inp, colorScheme: "dark" }} type="time" value={f.hora} onChange={e => u("hora", e.target.value)} /></div>
+              </div>
+              <label style={lbl}>{lang === "en" ? "City of birth" : "Lugar de nacimiento"} *</label>
+              <CityInput value={f.lugar} onChange={v => u("lugar", v)} placeholder={lang === "en" ? "City, Country" : "Ciudad, País"} />
+              <button onClick={okStep2} disabled={loading} style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading ? "wait" : "pointer", textTransform: "uppercase", width: "100%", opacity: loading ? 0.5 : 1 }}>
+                {loading ? (lang === "en" ? "Calculating design..." : "Calculando tu diseño...") : (lang === "en" ? "Create account" : "Crear cuenta")}
+              </button>
+              <button onClick={() => { setStep(1); setErr(""); }} style={{ background: "none", border: "none", color: C.dim, cursor: "pointer", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".1em", marginTop: ".8rem", width: "100%", textAlign: "center" }}>
+                ← {lang === "en" ? "Back" : "Volver"}
+              </button>
+            </>
+          )}
         </div>
         <div style={{ textAlign: "center", margin: "1.2rem 0", color: C.dim, fontFamily: "monospace", fontSize: ".7rem" }}>
           {lang === "en" ? "Already have an account? " : "¿Ya tenés cuenta? "}
@@ -469,7 +545,7 @@ function Login({ go, lang, setDynamicUser }) {
         <div style={{ textAlign: "center", margin: "1.2rem 0", color: C.dim, fontFamily: "monospace", fontSize: ".7rem" }}>
           {lang === "en" ? "No account? " : "¿No tenés cuenta? "}
           <button onClick={() => go("register")} style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".63rem" }}>
-            {lang === "en" ? "Request access" : "Solicitá acceso"}
+            {lang === "en" ? "Create account" : "Solicitá acceso"}
           </button>
         </div>
       </div>
