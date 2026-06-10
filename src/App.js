@@ -263,11 +263,8 @@ function Welcome({ go, lang, setLang }) {
           </button>
         ))}
       </div>
-      <div style={logo}>INSIDE</div>
+      <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ textAlign: "center", maxWidth: 580 }}>
-        <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: C.gold, textTransform: "uppercase", marginBottom: "1.2rem" }}>
-          {lang === "en" ? "THIS IS SIMPLE INSIDE" : "ESTO ES SIMPLE INSIDE"}
-        </div>
         <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "2.5rem", fontFamily: GEORGIA }}>
           {lang === "en"
             ? <>The first AI Mentor trained<br /><span style={{ color: C.gold, fontStyle: "italic" }}>with your biological design.</span></>
@@ -373,7 +370,7 @@ function Register({ go, lang }) {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto" }}>
       {showTyC && <TyCModal />}
-      <div style={logo}>INSIDE</div>
+      <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ display: "flex", justifyContent: "center", gap: ".4rem", marginBottom: "1.5rem" }}>
           {[1, 2].map(s => (
@@ -446,7 +443,7 @@ function Register({ go, lang }) {
 function Pending({ email, go, lang }) {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: GEORGIA, color: C.txt }}>
-      <div style={logo}>INSIDE</div>
+      <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ textAlign: "center", maxWidth: 460 }}>
         <div style={{ fontSize: "2.5rem", marginBottom: "1.2rem" }}>✉️</div>
         <div style={{ fontSize: "1.5rem", fontWeight: 300, marginBottom: ".8rem" }}>
@@ -513,7 +510,7 @@ function Login({ go, lang, setDynamicUser }) {
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: NUNITO, color: C.txt }}>
-      <div style={logo}>INSIDE</div>
+      <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ fontSize: "1.5rem", fontWeight: 300, textAlign: "center", marginBottom: ".4rem", fontFamily: GEORGIA }}>{lang === "en" ? "Sign in" : "Ingresar"}</div>
         <div style={{ color: C.dim, textAlign: "center", marginBottom: "1.5rem", fontSize: ".9rem" }}>{lang === "en" ? "Welcome back." : "Bienvenido de nuevo."}</div>
