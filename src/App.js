@@ -342,20 +342,33 @@ function Register({ go, lang }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
       <div style={{ background: "#111", border: "1px solid rgba(184,154,78,.3)", borderRadius: 16, width: "min(600px,100%)", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid rgba(184,154,78,.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: C.gold, textTransform: "uppercase" }}>Términos y Condiciones</div>
+          <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: C.gold, textTransform: "uppercase" }}>{lang === "en" ? "Terms and Conditions" : "Términos y Condiciones"}</div>
           <button onClick={() => setShowTyC(false)} style={{ background: "none", border: "none", color: C.dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
         </div>
         <div style={{ padding: "1.5rem 2rem", overflowY: "auto", fontFamily: NUNITO, fontSize: ".85rem", color: C.dim, lineHeight: 1.8 }}>
-          <p style={{ color: C.txt, fontWeight: 600, marginBottom: ".5rem" }}>SIMPLE INSIDE — Términos y Condiciones</p>
-          <p style={{ marginBottom: "1rem", fontSize: ".75rem" }}>Última actualización: junio de 2026</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>1. Qué es y qué no es SIMPLE INSIDE</strong><br/>SIMPLE INSIDE es un espacio para conocer aspectos de tu personalidad, explorar tu forma de tomar decisiones y reflexionar sobre situaciones de liderazgo. No es un servicio de salud mental, no es terapia y no reemplaza el acompañamiento de un profesional.</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>2. Edad mínima</strong><br/>SIMPLE INSIDE está diseñada exclusivamente para mayores de 18 años.</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>3. Datos que recopilamos</strong><br/>Nombre, apellido, email y datos de nacimiento para personalizar tu experiencia. El contenido de tus conversaciones se procesa a través de la API de Anthropic (Claude) para generar respuestas. No usamos tus datos para entrenar modelos de IA. No vendemos ni compartimos tus datos con terceros.</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>4. Privacidad</strong><br/>Tus conversaciones son privadas — solo vos tenés acceso a ellas. Los datos se almacenan de forma segura en Supabase con cifrado en tránsito y control de acceso por usuario.</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>5. Retención de datos</strong><br/>Al eliminar tu cuenta, todos tus datos personales serán eliminados dentro de los 60 días siguientes. Si tu suscripción vence y no es renovada, el historial se conserva por 60 días y luego se elimina de forma permanente.</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>6. Servicios de terceros</strong><br/>Usamos Supabase para la base de datos y Anthropic (Claude) para el procesamiento de IA. Ambos operan bajo sus propias políticas de privacidad.</p>
-          <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>7. Contacto</strong><br/>soyfranblanco@gmail.com · inside.metodosimple.ar</p>
-          <p style={{ fontSize: ".72rem", color: "rgba(240,235,224,.3)" }}>© 2026 SIMPLE SRL. Todos los derechos reservados.</p>
+          {lang === "en" ? <>
+            <p style={{ color: C.txt, fontWeight: 600, marginBottom: ".5rem" }}>SIMPLE INSIDE — Terms and Conditions</p>
+            <p style={{ marginBottom: "1rem", fontSize: ".75rem" }}>Last updated: June 2026</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>1. What SIMPLE INSIDE is and is not</strong><br/>SIMPLE INSIDE is a space to explore aspects of your personality, your decision-making style, and leadership situations. It is not a mental health service, not therapy, and does not replace professional support.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>2. Minimum age</strong><br/>SIMPLE INSIDE is designed exclusively for users over 18 years old.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>3. Data we collect</strong><br/>Name, last name, email and birth data to personalize your experience. Conversation content is processed through Anthropic's API (Claude) to generate responses. We do not use your data to train AI models. We do not sell or share your data with third parties.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>4. Privacy</strong><br/>Your conversations are private — only you have access to them. Data is stored securely in Supabase with encryption in transit and per-user access control.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>5. Data retention</strong><br/>Upon account deletion, all personal data will be deleted within 60 days. If your subscription expires and is not renewed, conversation history is retained for 60 days and then permanently deleted.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>6. Third-party services</strong><br/>We use Supabase for the database and Anthropic (Claude) for AI processing. Both operate under their own privacy policies.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>7. Contact</strong><br/>soyfranblanco@gmail.com · inside.metodosimple.ar</p>
+            <p style={{ fontSize: ".72rem", color: "rgba(240,235,224,.3)" }}>© 2026 SIMPLE SRL. All rights reserved.</p>
+          </> : <>
+            <p style={{ color: C.txt, fontWeight: 600, marginBottom: ".5rem" }}>SIMPLE INSIDE — Términos y Condiciones</p>
+            <p style={{ marginBottom: "1rem", fontSize: ".75rem" }}>Última actualización: junio de 2026</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>1. Qué es y qué no es SIMPLE INSIDE</strong><br/>SIMPLE INSIDE es un espacio para conocer aspectos de tu personalidad, explorar tu forma de tomar decisiones y reflexionar sobre situaciones de liderazgo. No es un servicio de salud mental, no es terapia y no reemplaza el acompañamiento de un profesional.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>2. Edad mínima</strong><br/>SIMPLE INSIDE está diseñada exclusivamente para mayores de 18 años.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>3. Datos que recopilamos</strong><br/>Nombre, apellido, email y datos de nacimiento para personalizar tu experiencia. El contenido de tus conversaciones se procesa a través de la API de Anthropic (Claude) para generar respuestas. No usamos tus datos para entrenar modelos de IA. No vendemos ni compartimos tus datos con terceros.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>4. Privacidad</strong><br/>Tus conversaciones son privadas — solo vos tenés acceso a ellas. Los datos se almacenan de forma segura en Supabase con cifrado en tránsito y control de acceso por usuario.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>5. Retención de datos</strong><br/>Al eliminar tu cuenta, todos tus datos personales serán eliminados dentro de los 60 días siguientes. Si tu suscripción vence y no es renovada, el historial se conserva por 60 días y luego se elimina de forma permanente.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>6. Servicios de terceros</strong><br/>Usamos Supabase para la base de datos y Anthropic (Claude) para el procesamiento de IA. Ambos operan bajo sus propias políticas de privacidad.</p>
+            <p style={{ marginBottom: "1rem" }}><strong style={{ color: C.txt }}>7. Contacto</strong><br/>soyfranblanco@gmail.com · inside.metodosimple.ar</p>
+            <p style={{ fontSize: ".72rem", color: "rgba(240,235,224,.3)" }}>© 2026 SIMPLE SRL. Todos los derechos reservados.</p>
+          </>}
         </div>
         <div style={{ padding: "1rem 2rem", borderTop: "1px solid rgba(184,154,78,.15)" }}>
           <button onClick={() => { u("tyc", true); setShowTyC(false); }}
@@ -564,6 +577,27 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState(null);
   const [started, setStarted] = useState(false);
+  const [showAyuda, setShowAyuda] = useState(false);
+  const [ayudaMsg, setAyudaMsg] = useState("");
+  const [ayudaEmail, setAyudaEmail] = useState("");
+  const [ayudaLoading, setAyudaLoading] = useState(false);
+  const [ayudaOk, setAyudaOk] = useState(false);
+
+  async function enviarAyuda() {
+    if (!ayudaMsg.trim()) return;
+    setAyudaLoading(true);
+    try {
+      await fetch("/api/notify", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: "AYUDA INSIDE",
+          body: `Usuario: ${userEmail}\n\nMensaje:\n${ayudaMsg.trim()}${ayudaEmail ? `\n\nResponder a: ${ayudaEmail}` : ""}`
+        })
+      });
+      setAyudaOk(true);
+    } catch { setAyudaOk(false); }
+    setAyudaLoading(false);
+  }
 
   const CHIPS = lang === "en"
     ? ["How do I make better decisions under pressure?", "I have a difficult conversation I'm avoiding.", "Something in my team isn't working and I don't know what.", "I'm evaluating an important change."]
@@ -710,6 +744,10 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <button onClick={() => { setShowAyuda(true); setAyudaOk(false); setAyudaMsg(""); setAyudaEmail(""); }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: DC.dim, fontFamily: "monospace", fontSize: ".52rem", letterSpacing: ".15em", padding: "4px 8px" }}>
+            {lang === "en" ? "Help" : "Ayuda"}
+          </button>
           <button onClick={() => setDarkMode(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.8, display: "flex", alignItems: "center" }}>
             {darkMode
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DC.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -869,6 +907,63 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
       <div style={{ textAlign: "center", padding: ".6rem", fontFamily: "monospace", fontSize: ".5rem", color: darkMode ? "rgba(240,235,224,.15)" : "rgba(26,26,26,.3)", letterSpacing: ".15em" }}>
         SIMPLE INSIDE · Fran Blanco · 2026
       </div>
+
+      {/* WhatsApp flotante */}
+      <a href="https://wa.me/541167109054?text=I%20need%20help%20with%20SIMPLE%20INSIDE" target="_blank" rel="noreferrer"
+        style={{ position: "fixed", bottom: "1.8rem", right: "1.8rem", width: 52, height: 52, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,.4)", zIndex: 100, textDecoration: "none" }}>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.979-1.404A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.96 7.96 0 01-4.099-1.132l-.29-.173-3.046.859.875-3.025-.189-.31A7.96 7.96 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
+        </svg>
+      </a>
+
+      {/* Modal Ayuda */}
+      {showAyuda && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: darkMode ? "#111" : "#f5f0e8", border: "1px solid rgba(184,154,78,.3)", borderRadius: 16, width: "min(480px,100%)", overflow: "hidden" }}>
+            <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid rgba(184,154,78,.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase" }}>{lang === "en" ? "Help" : "Ayuda"}</div>
+              <button onClick={() => setShowAyuda(false)} style={{ background: "none", border: "none", color: DC.dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
+            </div>
+            <div style={{ padding: "1.5rem 2rem" }}>
+              {ayudaOk ? (
+                <div style={{ textAlign: "center", padding: "1.5rem 0" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✓</div>
+                  <div style={{ fontFamily: GEORGIA, fontSize: "1rem", color: DC.txt, marginBottom: ".5rem" }}>
+                    {lang === "en" ? "Message sent" : "Mensaje enviado"}
+                  </div>
+                  <div style={{ color: DC.dim, fontSize: ".85rem", fontFamily: NUNITO }}>
+                    {lang === "en" ? "We'll get back to you as soon as possible." : "Te respondemos a la brevedad."}
+                  </div>
+                  <button onClick={() => setShowAyuda(false)}
+                    style={{ marginTop: "1.5rem", background: DC.gold, color: DC.bg, border: "none", borderRadius: 20, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".6em 1.5em", cursor: "pointer", textTransform: "uppercase" }}>
+                    {lang === "en" ? "Close" : "Cerrar"}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ color: DC.dim, fontSize: ".85rem", fontFamily: NUNITO, lineHeight: 1.7, marginBottom: "1.2rem" }}>
+                    {lang === "en" ? "Tell us what's happening and we'll get back to you as soon as we can." : "Contanos qué pasa y te respondemos a la brevedad."}
+                  </div>
+                  <textarea value={ayudaMsg} onChange={e => setAyudaMsg(e.target.value)}
+                    placeholder={lang === "en" ? "Tell us what's happening..." : "Contanos qué pasa..."}
+                    style={{ width: "100%", background: darkMode ? "rgba(255,255,255,.04)" : "rgba(0,0,0,.04)", border: "1px solid rgba(184,154,78,.2)", borderRadius: 8, color: DC.txt, fontFamily: NUNITO, fontSize: ".85rem", padding: ".8rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 120, boxSizing: "border-box", marginBottom: ".8rem" }} />
+                  <div style={{ color: DC.dim, fontSize: ".8rem", fontFamily: NUNITO, marginBottom: ".4rem" }}>
+                    {lang === "en" ? "Reply to a different email? (optional)" : "¿Querés que te respondamos a otro mail? (opcional)"}
+                  </div>
+                  <input value={ayudaEmail} onChange={e => setAyudaEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid rgba(184,154,78,.25)", color: DC.txt, fontFamily: NUNITO, fontSize: ".85rem", padding: ".5rem 0", outline: "none", marginBottom: "1.2rem", boxSizing: "border-box" }} />
+                  <button onClick={enviarAyuda} disabled={ayudaLoading || !ayudaMsg.trim()}
+                    style={{ background: DC.gold, color: DC.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".58rem", letterSpacing: ".2em", padding: ".75em 2em", cursor: ayudaLoading || !ayudaMsg.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", width: "100%", opacity: ayudaLoading || !ayudaMsg.trim() ? 0.5 : 1 }}>
+                    {ayudaLoading ? "..." : (lang === "en" ? "Send" : "Enviar")}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
