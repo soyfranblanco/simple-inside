@@ -306,7 +306,7 @@ function Welcome({ go, lang, setLang }) {
 }
 
 // ── REGISTER ──────────────────────────────────────────────────────────────────
-function Register({ go, lang }) {
+function Register({ go, lang, setLang }) {
   const [step, setStep] = useState(1);
   const [f, setF] = useState({ nom: "", ape: "", email: "", pass: "", fecha: "", hora: "", lugar: "", tyc: false });
   const [err, setErr] = useState("");
@@ -402,6 +402,14 @@ function Register({ go, lang }) {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto" }}>
       {showTyC && <TyCModal />}
+        <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 50 }}>
+          {["es", "en"].map(l => (
+            <button key={l} onClick={() => setLang(l)}
+              style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
+              {l}
+            </button>
+          ))}
+        </div>
       <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ display: "flex", justifyContent: "center", gap: ".4rem", marginBottom: "1.5rem" }}>
@@ -472,9 +480,17 @@ function Register({ go, lang }) {
 }
 
 // ── PENDING ───────────────────────────────────────────────────────────────────
-function Pending({ email, go, lang }) {
+function Pending({ email, go, lang, setLang }) {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: GEORGIA, color: C.txt }}>
+        <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 50 }}>
+          {["es", "en"].map(l => (
+            <button key={l} onClick={() => setLang(l)}
+              style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
+              {l}
+            </button>
+          ))}
+        </div>
       <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ textAlign: "center", maxWidth: 460 }}>
         <div style={{ fontSize: "2.5rem", marginBottom: "1.2rem" }}>✉️</div>
@@ -496,7 +512,7 @@ function Pending({ email, go, lang }) {
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
-function Login({ go, lang, setDynamicUser }) {
+function Login({ go, lang, setLang, setDynamicUser }) {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
@@ -542,6 +558,14 @@ function Login({ go, lang, setDynamicUser }) {
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: NUNITO, color: C.txt }}>
+        <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 50 }}>
+          {["es", "en"].map(l => (
+            <button key={l} onClick={() => setLang(l)}
+              style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
+              {l}
+            </button>
+          ))}
+        </div>
       <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ fontSize: "1.5rem", fontWeight: 300, textAlign: "center", marginBottom: ".4rem", fontFamily: GEORGIA }}>{lang === "en" ? "Sign in" : "Ingresar"}</div>
@@ -1000,9 +1024,9 @@ export default function App() {
     <div style={{ background: C.bg, minHeight: "100vh" }}>
       <style>{"*{box-sizing:border-box;margin:0;padding:0}body{background:#080808}input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #080808 inset!important;-webkit-text-fill-color:#f0ebe0!important}"}</style>
       {screen === "welcome"  && <Welcome go={go} lang={lang} setLang={setLang} />}
-      {screen === "register" && <Register go={go} lang={lang} />}
-      {screen === "pending"  && <Pending email={email} go={go} lang={lang} />}
-      {screen === "login"    && <Login go={go} lang={lang} setDynamicUser={setDynamicUser} />}
+      {screen === "register" && <Register go={go} lang={lang} setLang={setLang} />}
+      {screen === "pending"  && <Pending email={email} go={go} lang={lang} setLang={setLang} />}
+      {screen === "login"    && <Login go={go} lang={lang} setLang={setLang} setDynamicUser={setDynamicUser} />}
       {screen === "chat"     && <Chat go={go} userEmail={email} lang={lang} setLang={setLang} dynamicUser={dynamicUser} />}
     </div>
   );
