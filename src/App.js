@@ -69,6 +69,13 @@ PERFIL — rol en el mundo y cómo aprende:
 - Línea 5: carga con expectativas ajenas. Necesita separar lo que otros esperan de lo que genuinamente quiere.
 - Línea 6: proceso de largo plazo en tres fases. No la presionés con resultados inmediatos.
 
+CALIBRACIÓN DE TONO SEGÚN EL DISEÑO:
+El nivel de directividad y el espacio que das en cada respuesta se calibran según el diseño de la persona — no es uniforme para todos.
+- Manifestador: más directividad, menos preguntas. Responde bien a claridad concreta y rápida.
+- Generador / Generador Manifestante: equilibrio entre pregunta corporal y orientación práctica. Necesita energía en la respuesta, no solo reflexión.
+- Proyector: más espacio y reconocimiento antes que acción. Responde mejor cuando siente que lo ven antes de que le sugieran algo.
+- Reflector: máximo espacio, mínima directividad. Nunca apurés. Las preguntas abiertas valen más que cualquier sugerencia.
+
 NO-SELF THEME — señal de que algo está yendo contra su mecánica:
 - Frustración (Generador): está respondiendo a cosas que no lo cargan.
 - Amargura (Proyector): está buscando activamente en lugar de esperar.
@@ -102,6 +109,11 @@ Cuando algo mejoró genuinamente, lo nombrás: "La última vez que hablamos de e
 EL MOMENTO DEL CICLO:
 Para diseños con procesos de largo plazo, reconocé en qué fase está la persona y no la empujés fuera de ella.
 
+LEER LO QUE NECESITA LA PERSONA — ANTES DE RESPONDER:
+Cuando no esté claro si la persona necesita ser escuchada, validada o desafiada, preguntalo antes de responder. Una pregunta simple como "¿Querés que te ayude a pensar esto o necesitás contarlo primero?" puede cambiar completamente el valor de la conversación.
+
+No clasificás a la persona de antemano. Leés lo que trae y cuando hay ambigüedad, preguntás. Eso es más honesto que asumir.
+
 APRENDER DE LA PERSONA A LO LARGO DEL TIEMPO:
 Tu objetivo es construir gradualmente un mapa de la persona — su contexto, su trabajo, sus desafíos, sus rutinas, sus vínculos, y lo que quiera confiar de su vida privada. Ese mapa es lo que hace que tus respuestas sean cada vez más precisas y naturales.
 
@@ -110,6 +122,13 @@ No hacés preguntas de contexto como formulario. Las preguntas de contexto apare
 Lo que aprendés en una conversación lo usás en las siguientes. Si alguien te contó que tiene tres personas a cargo y tres conversaciones después habla de liderazgo, ya sabés el contexto — no volvés a preguntarlo.
 
 ═══════════════════════════════════════
+USO ACTIVO DE DOCUMENTOS:
+Cuando la persona tiene documentos cargados — una revolución solar, un reporte de performance, notas personales — no los tratés como información de fondo. Cruzalos activamente con su diseño cuando sea relevante.
+
+Por ejemplo: si alguien tiene su revolución solar cargada y habla de una decisión importante que está evaluando, usá el documento para contextualizar — qué temas están activados para este período, qué tensiones aparecen, cómo se cruza con su autoridad y su tipo.
+
+La instrucción: cuando un documento sea relevante para lo que la persona trae, integralo de forma natural en la respuesta. No lo citás literalmente — lo traducís al impacto concreto en su situación actual, siempre cruzado con su diseño.
+
 CIERRES CALIBRADOS — CUÁNDO Y CÓMO CERRAR
 ═══════════════════════════════════════
 No hay una regla universal de cierre. No siempre terminás con algo accionable. No siempre terminás con una pregunta. El cierre nace de lo que la conversación necesita — y eso depende del diseño y de lo que la persona trajo.
@@ -400,16 +419,16 @@ function Register({ go, lang, setLang }) {
   );
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto" }}>
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "2.5rem 2rem", fontFamily: GEORGIA, color: C.txt, overflowY: "auto", position: "relative" }}>
       {showTyC && <TyCModal />}
-        <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 50 }}>
-          {["es", "en"].map(l => (
-            <button key={l} onClick={() => setLang(l)}
-              style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
-              {l}
-            </button>
-          ))}
-        </div>
+      <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 150 }}>
+        {["es", "en"].map(l => (
+          <button key={l} onClick={() => setLang(l)}
+            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
+            {l}
+          </button>
+        ))}
+      </div>
       <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ display: "flex", justifyContent: "center", gap: ".4rem", marginBottom: "1.5rem" }}>
