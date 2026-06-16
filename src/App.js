@@ -748,7 +748,7 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     if (!docNombre.trim()) setDocNombre(file.name.replace(".pdf", ""));
     try {
       const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file); });
-      const resp = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 4000, messages: [{ role: "user", content: [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }, { type: "text", text: "Extraé todo el texto de este documento. Solo el texto, sin comentarios." }] }] }) });
+      const resp = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, messages: [{ role: "user", content: [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }, { type: "text", text: "Extraé todo el texto de este documento. Solo el texto, sin comentarios." }] }] }) });
       const data = await resp.json();
       setDocTexto(data.content?.[0]?.text || "");
     } catch { alert("No se pudo leer el PDF."); }
@@ -764,7 +764,7 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     const next = [...msgs, { role: "user", content: txt }];
     setMsgs(next); setLoading(true);
     try {
-      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: buildSystemPrompt(), messages: next }) });
+      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, system: buildSystemPrompt(), messages: next }) });
       const d = await r.json();
       const finalMsgs = [...next, { role: "assistant", content: d?.content?.[0]?.text || "Error." }];
       setMsgs(finalMsgs);
