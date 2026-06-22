@@ -542,10 +542,10 @@ function Register({ go, lang, setLang }) {
 
 // ── PENDING ───────────────────────────────────────────────────────────────────
 function Pending({ email, go, lang, setLang }) {
-  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
+  const [digits, setDigits] = useState(["", "", "", "", "", "", "", ""]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
-  const refs = Array.from({ length: 6 }, () => React.createRef());
+  const refs = Array.from({ length: 8 }, () => React.createRef());
 
   function handleDigit(i, val) {
     if (!/^[0-9]?$/.test(val)) return;
@@ -560,8 +560,8 @@ function Pending({ email, go, lang, setLang }) {
   }
 
   function handlePaste(e) {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted.length === 6) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 8);
+    if (pasted.length === 8) {
       setDigits(pasted.split(""));
       refs[5].current?.focus();
     }
@@ -570,7 +570,7 @@ function Pending({ email, go, lang, setLang }) {
 
   async function verificar() {
     const token = digits.join("");
-    if (token.length < 6) { setErr(lang === "en" ? "Enter the 6-digit code." : "Ingresá el código de 6 dígitos."); return; }
+    if (token.length < 8) { setErr(lang === "en" ? "Enter the 8-digit code." : "Ingresá el código de 8 dígitos."); return; }
     setLoading(true); setErr("");
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
@@ -613,7 +613,7 @@ function Pending({ email, go, lang, setLang }) {
           ))}
         </div>
         <button onClick={verificar} disabled={loading || digits.join("").length < 6}
-          style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading || digits.join("").length < 6 ? "not-allowed" : "pointer", textTransform: "uppercase", width: "100%", opacity: loading || digits.join("").length < 6 ? 0.5 : 1, marginBottom: "1rem" }}>
+          style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading || digits.join("").length < 8 ? "not-allowed" : "pointer", textTransform: "uppercase", width: "100%", opacity: loading || digits.join("").length < 8 ? 0.5 : 1, marginBottom: "1rem" }}>
           {loading ? "..." : (lang === "en" ? "Verify" : "Verificar")}
         </button>
         <div style={{ color: C.dim, fontFamily: NUNITO, fontSize: ".78rem", marginBottom: "1rem" }}>
