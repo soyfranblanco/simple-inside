@@ -600,8 +600,8 @@ function Pending({ email, go, lang, setLang }) {
         </div>
         <div style={{ color: C.dim, lineHeight: 1.7, marginBottom: "2rem", fontFamily: NUNITO, fontSize: ".9rem" }}>
           {lang === "en"
-            ? <>We sent a 6-digit code to <span style={{ color: C.gold }}>{email}</span>. It expires in 10 minutes.</>
-            : <>Te mandamos un código de 6 dígitos a <span style={{ color: C.gold }}>{email}</span>. Vence en 10 minutos.</>}
+            ? <>We sent an 8-digit code to <span style={{ color: C.gold }}>{email}</span>. It expires in 10 minutes.</>
+            : <>Te mandamos un código de 8 dígitos a <span style={{ color: C.gold }}>{email}</span>. Vence en 10 minutos.</>}
         </div>
         {err && <div style={{ color: "#c06040", fontFamily: "monospace", fontSize: ".63rem", marginBottom: "1rem" }}>{err}</div>}
         <div style={{ display: "flex", gap: ".6rem", justifyContent: "center", marginBottom: "2rem" }} onPaste={handlePaste}>
