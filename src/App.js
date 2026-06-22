@@ -542,28 +542,81 @@ function Register({ go, lang, setLang }) {
 
 // ── PENDING ───────────────────────────────────────────────────────────────────
 function Pending({ email, go, lang, setLang }) {
+  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const refs = Array.from({ length: 6 }, () => React.createRef());
+
+  function handleDigit(i, val) {
+    if (!/^[0-9]?$/.test(val)) return;
+    const next = [...digits];
+    next[i] = val;
+    setDigits(next);
+    if (val && i < 5) refs[i + 1].current?.focus();
+  }
+
+  function handleKeyDown(i, e) {
+    if (e.key === "Backspace" && !digits[i] && i > 0) refs[i - 1].current?.focus();
+  }
+
+  function handlePaste(e) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length === 6) {
+      setDigits(pasted.split(""));
+      refs[5].current?.focus();
+    }
+    e.preventDefault();
+  }
+
+  async function verificar() {
+    const token = digits.join("");
+    if (token.length < 6) { setErr(lang === "en" ? "Enter the 6-digit code." : "Ingresá el código de 6 dígitos."); return; }
+    setLoading(true); setErr("");
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token, type: "signup" });
+      if (error) {
+        setErr(lang === "en" ? "Invalid or expired code." : "Código inválido o vencido.");
+      } else {
+        go("chat");
+      }
+    } catch { setErr(lang === "en" ? "Connection error." : "Error de conexión."); }
+    setLoading(false);
+  }
+
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", fontFamily: GEORGIA, color: C.txt }}>
-        <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 50 }}>
-          {["es", "en"].map(l => (
-            <button key={l} onClick={() => setLang(l)}
-              style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
-              {l}
-            </button>
-          ))}
-        </div>
+      <div style={{ position: "fixed", top: "1.5rem", right: "1.5rem", display: "flex", gap: ".3rem", zIndex: 50 }}>
+        {["es", "en"].map(l => (
+          <button key={l} onClick={() => setLang(l)}
+            style={{ background: lang === l ? "rgba(184,154,78,.15)" : "none", border: "1px solid rgba(184,154,78,.25)", color: lang === l ? C.gold : C.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".3em .7em", cursor: "pointer", textTransform: "uppercase" }}>
+            {l}
+          </button>
+        ))}
+      </div>
       <div style={logo}>SIMPLE <strong>INSIDE</strong></div>
-      <div style={{ textAlign: "center", maxWidth: 460 }}>
-        <div style={{ fontSize: "2.5rem", marginBottom: "1.2rem" }}>✉️</div>
+      <div style={{ textAlign: "center", maxWidth: 460, width: "100%" }}>
         <div style={{ fontSize: "1.5rem", fontWeight: 300, marginBottom: ".8rem" }}>
           {lang === "en" ? "Check your email" : "Revisá tu email"}
         </div>
-        <div style={{ color: C.dim, lineHeight: 1.7, marginBottom: "1.5rem" }}>
+        <div style={{ color: C.dim, lineHeight: 1.7, marginBottom: "2rem", fontFamily: NUNITO, fontSize: ".9rem" }}>
           {lang === "en"
-            ? <>We sent a link to <span style={{ color: C.gold }}>{email}</span>.<br /><br />Once confirmed you can start your session.</>
-            : <>Te mandamos un link a <span style={{ color: C.gold }}>{email}</span>.<br /><br />Una vez que confirmés podés iniciar tu sesión.</>}
+            ? <>We sent a 6-digit code to <span style={{ color: C.gold }}>{email}</span>. It expires in 10 minutes.</>
+            : <>Te mandamos un código de 6 dígitos a <span style={{ color: C.gold }}>{email}</span>. Vence en 10 minutos.</>}
         </div>
-        <div style={{ border: "1px solid rgba(184,154,78,.2)", padding: "1rem 1.5rem", background: "rgba(184,154,78,.04)", marginBottom: "2rem", fontFamily: "monospace", fontSize: ".68rem", color: C.dim, lineHeight: 1.8 }}>
+        {err && <div style={{ color: "#c06040", fontFamily: "monospace", fontSize: ".63rem", marginBottom: "1rem" }}>{err}</div>}
+        <div style={{ display: "flex", gap: ".6rem", justifyContent: "center", marginBottom: "2rem" }} onPaste={handlePaste}>
+          {digits.map((d, i) => (
+            <input key={i} ref={refs[i]} value={d} maxLength={1} inputMode="numeric"
+              onChange={e => handleDigit(i, e.target.value)}
+              onKeyDown={e => handleKeyDown(i, e)}
+              style={{ width: 44, height: 56, textAlign: "center", fontSize: "1.4rem", fontFamily: "monospace", background: "rgba(184,154,78,.06)", border: `1px solid ${d ? C.gold : "rgba(184,154,78,.25)"}`, color: C.txt, borderRadius: 8, outline: "none", caretColor: C.gold }} />
+          ))}
+        </div>
+        <button onClick={verificar} disabled={loading || digits.join("").length < 6}
+          style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: loading || digits.join("").length < 6 ? "not-allowed" : "pointer", textTransform: "uppercase", width: "100%", opacity: loading || digits.join("").length < 6 ? 0.5 : 1, marginBottom: "1rem" }}>
+          {loading ? "..." : (lang === "en" ? "Verify" : "Verificar")}
+        </button>
+        <div style={{ color: C.dim, fontFamily: NUNITO, fontSize: ".78rem", marginBottom: "1rem" }}>
           {lang === "en" ? "Can't find it? Check your spam folder." : "¿No recibiste el email? Revisá tu carpeta de spam."}
         </div>
         <button onClick={() => go("welcome")} style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", fontSize: ".63rem" }}>← {lang === "en" ? "Back to start" : "Volver al inicio"}</button>
