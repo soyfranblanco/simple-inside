@@ -573,7 +573,7 @@ function Pending({ email, go, lang, setLang }) {
     if (token.length < 6) { setErr(lang === "en" ? "Enter the 6-digit code." : "Ingresá el código de 6 dígitos."); return; }
     setLoading(true); setErr("");
     try {
-      const { error } = await supabase.auth.verifyOtp({ email, token, type: "signup" });
+      const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
       if (error) {
         setErr(lang === "en" ? "Invalid or expired code." : "Código inválido o vencido.");
       } else {
