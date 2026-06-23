@@ -347,8 +347,8 @@ function Welcome({ go, lang, setLang }) {
       <div style={{ textAlign: "center", maxWidth: 580 }}>
         <div style={{ fontSize: "clamp(1.6rem,4vw,2.4rem)", fontWeight: 300, lineHeight: 1.3, marginBottom: "2.5rem", fontFamily: GEORGIA }}>
           {lang === "en"
-            ? <>Your AI Partner<br /><span style={{ color: C.gold, fontStyle: "italic" }}>trained with your biological design.</span></>
-            : <>Tu AI Partner<br /><span style={{ color: C.gold, fontStyle: "italic" }}>entrenado con tu diseño biológico.</span></>}
+            ? <>The first AI Partner that<br /><span style={{ color: C.gold, fontStyle: "italic" }}>responds to your biological design.</span></>
+            : <>El primer AI Partner que<br /><span style={{ color: C.gold, fontStyle: "italic" }}>responde a tu diseño biológico.</span></>}
         </div>
         <div style={{ maxWidth: 300, margin: "0 auto", display: "flex", flexDirection: "column", gap: ".8rem" }}>
           <button onClick={() => go("register")} style={{ background: C.gold, color: C.bg, border: "none", borderRadius: 24, fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".3em", padding: ".85em 2em", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>
