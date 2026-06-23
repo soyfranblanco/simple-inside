@@ -406,7 +406,7 @@ function Register({ go, lang, setLang }) {
       const { error: authError } = await supabase.auth.signUp({
         email: f.email.toLowerCase().trim(),
         password: f.pass,
-        options: { emailRedirectTo: "https://inside.metodosimple.ar", data: { nombre: f.nom, apellido: f.ape } }
+        options: { emailRedirectTo: "https://insideapp.metodosimple.ar", data: { nombre: f.nom, apellido: f.ape } }
       });
       if (authError) {
         setErr(authError.message.includes("already registered") ? (lang === "en" ? "That email is already registered." : "Ese email ya está registrado. Ingresá con tu contraseña.") : authError.message);
