@@ -732,6 +732,13 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   const docFileRef = React.useRef(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const textareaRef = React.useRef(null);
+
+  function autoResize(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 180) + "px";
+  }
   const [tab, setTab] = useState(null);
   const [started, setStarted] = useState(false);
   const [showAyuda, setShowAyuda] = useState(false);
@@ -1049,10 +1056,10 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
         </div>
 
         <div style={{ padding: "1rem 0 1.5rem", borderTop: "1px solid rgba(184,154,78,.15)", display: "flex", gap: ".8rem", alignItems: "flex-end" }}>
-          <textarea style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid ${DC.gold}40`, color: DC.txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", minHeight: "2rem", lineHeight: 1.5 }}
+          <textarea ref={textareaRef} style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid ${DC.gold}40`, color: DC.txt, fontFamily: GEORGIA, fontSize: ".95rem", padding: ".6rem 0", outline: "none", resize: "none", minHeight: "2.2rem", maxHeight: "180px", lineHeight: 1.6, overflowY: "auto" }}
             value={input}
             placeholder={lang === "en" ? "What's on your mind?" : "¿De qué hablamos?"}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => { setInput(e.target.value); autoResize(e.target); }}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} rows={1} />
           <button onClick={() => send()} disabled={loading || !input.trim()}
             style={{ background: "transparent", border: "1px solid " + DC.gold, borderRadius: 20, color: DC.gold, fontFamily: "monospace", fontSize: ".6rem", letterSpacing: ".2em", padding: ".6em 1em", cursor: "pointer", textTransform: "uppercase", marginBottom: 2, opacity: loading || !input.trim() ? 0.3 : 1 }}>
