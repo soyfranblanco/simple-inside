@@ -741,6 +741,12 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   }
   const [tab, setTab] = useState(null);
   const [started, setStarted] = useState(false);
+  const [docConfirmId, setDocConfirmId] = useState(null);
+  const [docEditId, setDocEditId] = useState(null);
+  const [docEditNombre, setDocEditNombre] = useState("");
+  const [docVerDoc, setDocVerDoc] = useState(null);
+  const [docProgress, setDocProgress] = useState(0);
+  const [docProgressMsg, setDocProgressMsg] = useState("");
   const [showAyuda, setShowAyuda] = useState(false);
   const [ayudaMsg, setAyudaMsg] = useState("");
   const [ayudaEmail, setAyudaEmail] = useState("");
@@ -827,7 +833,16 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     try {
       await apiDocs({ action: "delete", id });
       setDocumentos(prev => prev.filter(d => d.id !== id));
+      setDocConfirmId(null);
     } catch {}
+  }
+
+  async function renombrarDocumento(id, nombre) {
+    try {
+      await apiDocs({ action: "update", id, fields: { nombre } });
+      setDocumentos(prev => prev.map(d => d.id === id ? { ...d, nombre } : d));
+    } catch {}
+    setDocEditId(null);
   }
 
   async function handleDocPdf(e) {
@@ -835,13 +850,25 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { alert("El PDF supera los 5MB."); return; }
     setDocLoading(true);
+    setDocProgress(10);
+    setDocProgressMsg(lang === "en" ? "Reading file..." : "Leyendo archivo...");
     if (!docNombre.trim()) setDocNombre(file.name.replace(".pdf", ""));
     try {
       const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file); });
+      setDocProgress(40);
+      setDocProgressMsg(lang === "en" ? "Extracting text..." : "Extrayendo texto...");
       const resp = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, messages: [{ role: "user", content: [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }, { type: "text", text: "Extraé todo el texto de este documento. Solo el texto, sin comentarios." }] }] }) });
+      setDocProgress(85);
+      setDocProgressMsg(lang === "en" ? "Almost done..." : "Casi listo...");
       const data = await resp.json();
       setDocTexto(data.content?.[0]?.text || "");
-    } catch { alert("No se pudo leer el PDF."); }
+      setDocProgress(100);
+      setDocProgressMsg(lang === "en" ? "✓ PDF ready" : "✓ PDF listo");
+    } catch {
+      alert("No se pudo leer el PDF.");
+      setDocProgress(0);
+      setDocProgressMsg("");
+    }
     setDocLoading(false);
     e.target.value = "";
   }
@@ -938,28 +965,115 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
 
       {/* Documentos tab */}
       {tab === "documentos" && (
-        <div style={{ padding: "1.2rem 2rem", borderBottom: "1px solid rgba(184,154,78,.1)", background: darkMode ? "rgba(255,255,255,.02)" : "rgba(0,0,0,.03)", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "55vh", overflowY: "auto" }}>
+        <div style={{ padding: "1.2rem 2rem", borderBottom: "1px solid rgba(184,154,78,.1)", background: darkMode ? "rgba(255,255,255,.02)" : "rgba(0,0,0,.02)", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "60vh", overflowY: "auto" }}>
+
+          {/* Header del panel con X para cerrar */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase" }}>
+              {lang === "en" ? "My documents" : "Mis documentos"} {documentosActivos.length > 0 && `(${documentosActivos.length} ${lang === "en" ? "active" : "activos"})`}
+            </div>
+            <button onClick={() => setTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: DC.dim, display: "flex", alignItems: "center", gap: 4, fontFamily: "monospace", fontSize: ".48rem", letterSpacing: ".1em", padding: "3px 6px" }}>
+              ✕ {lang === "en" ? "Close" : "Cerrar"}
+            </button>
+          </div>
+
+          {/* Lista de documentos */}
           {documentos.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
-              <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase", marginBottom: ".3rem" }}>
-                {lang === "en" ? "Your documents" : "Tus documentos"} ({documentosActivos.length} {lang === "en" ? "active" : "activos"})
-              </div>
               {documentos.map(d => (
-                <div key={d.id} style={{ display: "flex", alignItems: "center", gap: ".6rem", padding: ".6rem .8rem", border: `1px solid ${d.activo ? "rgba(184,154,78,.3)" : "rgba(184,154,78,.1)"}`, borderRadius: 8, background: d.activo ? "rgba(184,154,78,.05)" : "transparent" }}>
-                  <button onClick={() => toggleDocumento(d.id, d.activo)}
-                    style={{ width: 18, height: 18, borderRadius: 4, border: `1px solid ${d.activo ? DC.gold : "rgba(184,154,78,.3)"}`, background: d.activo ? DC.gold : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".6rem", color: d.activo ? DC.bg : DC.dim }}>
-                    {d.activo ? "✓" : ""}
-                  </button>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: ".82rem", color: d.activo ? DC.txt : DC.dim, fontFamily: NUNITO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.nombre}</div>
-                    <div style={{ fontSize: ".68rem", color: DC.dim, fontFamily: "monospace" }}>{Math.round(d.contenido.length / 4)} {lang === "en" ? "words approx." : "palabras aprox."}</div>
+                <div key={d.id} style={{ border: `1px solid ${d.activo ? "rgba(184,154,78,.35)" : "rgba(184,154,78,.12)"}`, borderRadius: 10, background: d.activo ? "rgba(184,154,78,.06)" : "transparent", overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: ".6rem", padding: ".7rem .9rem" }}>
+                    {/* Ícono archivo */}
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(184,154,78,.12)", display: "flex", alignItems: "center", justifyContent: "center", color: DC.gold, fontSize: "1rem", flexShrink: 0 }}>📄</div>
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {docEditId === d.id ? (
+                        <input value={docEditNombre} onChange={e => setDocEditNombre(e.target.value)}
+                          onBlur={() => renombrarDocumento(d.id, docEditNombre)}
+                          onKeyDown={e => { if (e.key === "Enter") renombrarDocumento(d.id, docEditNombre); if (e.key === "Escape") setDocEditId(null); }}
+                          autoFocus
+                          style={{ width: "100%", background: "transparent", border: "none", borderBottom: `1px solid ${DC.gold}`, color: DC.txt, fontFamily: NUNITO, fontSize: ".82rem", padding: ".2rem 0", outline: "none", boxSizing: "border-box" }} />
+                      ) : (
+                        <div style={{ fontSize: ".82rem", color: d.activo ? DC.txt : DC.dim, fontFamily: NUNITO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: d.activo ? 500 : 400 }}>{d.nombre}</div>
+                      )}
+                      <div style={{ display: "flex", alignItems: "center", gap: ".5rem", marginTop: 2 }}>
+                        <span style={{ fontSize: ".65rem", color: DC.dim, fontFamily: "monospace" }}>{Math.round(d.contenido.length / 4)} {lang === "en" ? "words" : "palabras"}</span>
+                        {d.activo && <span style={{ fontSize: ".58rem", background: "rgba(184,154,78,.15)", color: DC.gold, padding: "1px 6px", borderRadius: 10, fontFamily: "monospace", letterSpacing: ".08em" }}>✓ {lang === "en" ? "Active" : "Activo"}</span>}
+                      </div>
+                    </div>
+                    {/* Acciones */}
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      {/* Toggle activo */}
+                      <button onClick={() => toggleDocumento(d.id, d.activo)} title={d.activo ? (lang === "en" ? "Deactivate" : "Desactivar") : (lang === "en" ? "Activate" : "Activar")}
+                        style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${d.activo ? DC.gold : "rgba(184,154,78,.2)"}`, background: d.activo ? DC.gold : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: d.activo ? DC.bg : DC.dim }}>
+                        {d.activo ? "✓" : "○"}
+                      </button>
+                      {/* Ver contenido */}
+                      <button onClick={() => setDocVerDoc(d)} title={lang === "en" ? "View content" : "Ver contenido"}
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".8rem", color: DC.dim }}>
+                        👁
+                      </button>
+                      {/* Editar nombre */}
+                      <button onClick={() => { setDocEditId(d.id); setDocEditNombre(d.nombre); }} title={lang === "en" ? "Edit name" : "Editar nombre"}
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".8rem", color: DC.dim }}>
+                        ✏️
+                      </button>
+                      {/* Borrar */}
+                      <button onClick={() => setDocConfirmId(d.id)} title={lang === "en" ? "Delete" : "Borrar"}
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".8rem", color: DC.dim }}>
+                        🗑
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => eliminarDocumento(d.id)} style={{ background: "none", border: "none", color: DC.dim, cursor: "pointer", fontSize: ".9rem", flexShrink: 0 }}>×</button>
                 </div>
               ))}
             </div>
           )}
-          <div style={{ borderTop: documentos.length > 0 ? "1px solid rgba(184,154,78,.1)" : "none", paddingTop: documentos.length > 0 ? "1rem" : 0 }}>
+
+          {/* Modal confirmar borrado */}
+          {docConfirmId && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+              <div style={{ background: darkMode ? "#111" : "#f5f0e8", border: "1px solid rgba(184,154,78,.3)", borderRadius: 16, padding: "1.5rem 2rem", width: "min(340px,100%)", textAlign: "center" }}>
+                <div style={{ fontFamily: GEORGIA, fontSize: "1rem", color: DC.txt, marginBottom: ".5rem" }}>
+                  {lang === "en" ? "Delete document?" : "¿Borrar este documento?"}
+                </div>
+                <div style={{ fontFamily: NUNITO, fontSize: ".8rem", color: DC.dim, marginBottom: "1.5rem" }}>
+                  {lang === "en" ? "This action cannot be undone." : "Esta acción no se puede deshacer."}
+                </div>
+                <div style={{ display: "flex", gap: ".6rem", justifyContent: "center" }}>
+                  <button onClick={() => setDocConfirmId(null)}
+                    style={{ background: "none", border: "1px solid rgba(184,154,78,.3)", borderRadius: 20, color: DC.dim, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".15em", padding: ".6em 1.5em", cursor: "pointer", textTransform: "uppercase" }}>
+                    {lang === "en" ? "Cancel" : "Cancelar"}
+                  </button>
+                  <button onClick={() => eliminarDocumento(docConfirmId)}
+                    style={{ background: "#c06040", border: "none", borderRadius: 20, color: "#fff", fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".15em", padding: ".6em 1.5em", cursor: "pointer", textTransform: "uppercase" }}>
+                    {lang === "en" ? "Delete" : "Borrar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal ver contenido */}
+          {docVerDoc && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+              <div style={{ background: darkMode ? "#111" : "#f5f0e8", border: "1px solid rgba(184,154,78,.3)", borderRadius: 16, width: "min(640px,100%)", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(184,154,78,.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".25em", color: DC.gold, textTransform: "uppercase" }}>{docVerDoc.nombre}</div>
+                  <button onClick={() => setDocVerDoc(null)} style={{ background: "none", border: "none", color: DC.dim, cursor: "pointer", fontSize: "1.2rem" }}>×</button>
+                </div>
+                <div style={{ padding: "1rem 1.5rem", overflowY: "auto", fontFamily: NUNITO, fontSize: ".82rem", color: DC.dim, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                  {docVerDoc.contenido}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Separador */}
+          {documentos.length > 0 && <div style={{ borderTop: "1px solid rgba(184,154,78,.1)" }} />}
+
+          {/* Agregar documento */}
+          <div>
             <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase", marginBottom: ".6rem" }}>
               {lang === "en" ? "Add document" : "Agregar documento"}
             </div>
@@ -971,16 +1085,24 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
                 </button>
               ))}
             </div>
-            <input value={docNombre} onChange={e => setDocNombre(e.target.value)}
-              placeholder={lang === "en" ? "Document name" : "Nombre del documento"}
-              style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid rgba(184,154,78,.2)", color: DC.txt, fontFamily: NUNITO, fontSize: ".82rem", padding: ".4rem 0", outline: "none", marginBottom: ".7rem", boxSizing: "border-box" }} />
             {docModo === "pdf" ? (
               <div>
                 <input ref={docFileRef} type="file" accept=".pdf" onChange={handleDocPdf} style={{ display: "none" }} />
                 <button onClick={() => docFileRef.current?.click()} disabled={docLoading}
-                  style={{ width: "100%", border: "2px dashed rgba(184,154,78,.25)", borderRadius: 8, padding: ".8rem", background: "transparent", color: DC.dim, fontFamily: NUNITO, fontSize: ".8rem", cursor: docLoading ? "wait" : "pointer", textAlign: "center" }}>
-                  {docLoading ? (lang === "en" ? "Reading PDF..." : "Leyendo PDF...") : (docTexto ? `✓ ${lang === "en" ? "PDF read — click Save" : "PDF leído — hacé clic en Guardar"}` : (lang === "en" ? "Click to select PDF" : "Hacé clic para seleccionar PDF"))}
+                  style={{ width: "100%", border: "1px dashed rgba(184,154,78,.3)", borderRadius: 10, padding: "1rem", background: "transparent", color: DC.dim, fontFamily: NUNITO, fontSize: ".82rem", cursor: docLoading ? "wait" : "pointer", textAlign: "center" }}>
+                  {docLoading ? "⏳" : "📄"} {docLoading ? (docProgressMsg || (lang === "en" ? "Processing..." : "Procesando...")) : (lang === "en" ? "Click to select PDF or drag here" : "Hacé clic para seleccionar PDF o arrastrá acá")}
                 </button>
+                {docLoading && (
+                  <div style={{ marginTop: ".5rem" }}>
+                    <div style={{ height: 3, background: "rgba(184,154,78,.15)", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", background: DC.gold, borderRadius: 3, width: `${docProgress}%`, transition: "width .4s ease" }} />
+                    </div>
+                    <div style={{ fontSize: ".65rem", color: DC.gold, fontFamily: "monospace", marginTop: 4, textAlign: "center" }}>{docProgressMsg}</div>
+                  </div>
+                )}
+                {!docLoading && docProgress === 100 && (
+                  <div style={{ fontSize: ".65rem", color: "#4caf50", fontFamily: "monospace", marginTop: 4, textAlign: "center" }}>{lang === "en" ? "✓ PDF ready — enter a name and save" : "✓ PDF listo — ingresá un nombre y guardá"}</div>
+                )}
               </div>
             ) : (
               <textarea value={docTexto} onChange={e => setDocTexto(e.target.value)}
@@ -988,10 +1110,15 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
                 style={{ width: "100%", background: "transparent", border: "1px solid rgba(184,154,78,.2)", borderRadius: 8, color: DC.txt, fontFamily: NUNITO, fontSize: ".82rem", padding: ".6rem", outline: "none", resize: "vertical", lineHeight: 1.6, minHeight: 100, boxSizing: "border-box" }} />
             )}
             {docTexto && (
-              <button onClick={subirDocumento} disabled={docLoading || !docNombre.trim()}
-                style={{ marginTop: ".6rem", background: DC.gold, color: DC.bg, border: "none", borderRadius: 20, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".6em 1.5em", cursor: docLoading || !docNombre.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", opacity: docLoading || !docNombre.trim() ? 0.5 : 1 }}>
-                {lang === "en" ? "Save document" : "Guardar documento"}
-              </button>
+              <div style={{ marginTop: ".7rem", display: "flex", alignItems: "center", gap: ".6rem" }}>
+                <input value={docNombre} onChange={e => setDocNombre(e.target.value)}
+                  placeholder={lang === "en" ? "Document name" : "Nombre del documento"}
+                  style={{ flex: 1, background: "transparent", border: "none", borderBottom: "1px solid rgba(184,154,78,.2)", color: DC.txt, fontFamily: NUNITO, fontSize: ".82rem", padding: ".4rem 0", outline: "none" }} />
+                <button onClick={subirDocumento} disabled={docLoading || !docNombre.trim()}
+                  style={{ background: DC.gold, color: DC.bg, border: "none", borderRadius: 20, fontFamily: "monospace", fontSize: ".55rem", letterSpacing: ".2em", padding: ".6em 1.5em", cursor: docLoading || !docNombre.trim() ? "not-allowed" : "pointer", textTransform: "uppercase", opacity: docLoading || !docNombre.trim() ? 0.5 : 1, flexShrink: 0 }}>
+                  {lang === "en" ? "Save" : "Guardar"}
+                </button>
+              </div>
             )}
           </div>
         </div>
