@@ -972,8 +972,9 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
             <div style={{ fontFamily: "monospace", fontSize: ".45rem", letterSpacing: ".3em", color: DC.gold, textTransform: "uppercase" }}>
               {lang === "en" ? "My documents" : "Mis documentos"} {documentosActivos.length > 0 && `(${documentosActivos.length} ${lang === "en" ? "active" : "activos"})`}
             </div>
-            <button onClick={() => setTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: DC.dim, display: "flex", alignItems: "center", gap: 4, fontFamily: "monospace", fontSize: ".48rem", letterSpacing: ".1em", padding: "3px 6px" }}>
-              ✕ {lang === "en" ? "Close" : "Cerrar"}
+            <button onClick={() => setTab(null)} style={{ background: "none", border: "1px solid rgba(184,154,78,.25)", borderRadius: 20, cursor: "pointer", color: DC.dim, display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: ".48rem", letterSpacing: ".1em", padding: "4px 10px" }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              {lang === "en" ? "Close" : "Cerrar"}
             </button>
           </div>
 
@@ -983,8 +984,11 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
               {documentos.map(d => (
                 <div key={d.id} style={{ border: `1px solid ${d.activo ? "rgba(184,154,78,.35)" : "rgba(184,154,78,.12)"}`, borderRadius: 10, background: d.activo ? "rgba(184,154,78,.06)" : "transparent", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: ".6rem", padding: ".7rem .9rem" }}>
-                    {/* Ícono archivo */}
-                    <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(184,154,78,.12)", display: "flex", alignItems: "center", justifyContent: "center", color: DC.gold, fontSize: "1rem", flexShrink: 0 }}>📄</div>
+                    {/* Toggle activo */}
+                    <button onClick={() => toggleDocumento(d.id, d.activo)} title={d.activo ? (lang === "en" ? "Deactivate" : "Desactivar") : (lang === "en" ? "Activate" : "Activar")}
+                      style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${d.activo ? DC.gold : "rgba(184,154,78,.25)"}`, background: d.activo ? DC.gold : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: d.activo ? DC.bg : DC.dim, flexShrink: 0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {docEditId === d.id ? (
@@ -998,30 +1002,28 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
                       )}
                       <div style={{ display: "flex", alignItems: "center", gap: ".5rem", marginTop: 2 }}>
                         <span style={{ fontSize: ".65rem", color: DC.dim, fontFamily: "monospace" }}>{Math.round(d.contenido.length / 4)} {lang === "en" ? "words" : "palabras"}</span>
-                        {d.activo && <span style={{ fontSize: ".58rem", background: "rgba(184,154,78,.15)", color: DC.gold, padding: "1px 6px", borderRadius: 10, fontFamily: "monospace", letterSpacing: ".08em" }}>✓ {lang === "en" ? "Active" : "Activo"}</span>}
+                        <span style={{ fontSize: ".58rem", background: d.activo ? "rgba(184,154,78,.15)" : "rgba(100,100,100,.12)", color: d.activo ? DC.gold : DC.dim, padding: "1px 6px", borderRadius: 10, fontFamily: "monospace", letterSpacing: ".08em" }}>
+                          {d.activo ? (lang === "en" ? "✓ Active" : "✓ Activo") : (lang === "en" ? "Inactive" : "Desactivado")}
+                        </span>
                       </div>
                     </div>
                     {/* Acciones */}
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      {/* Toggle activo */}
-                      <button onClick={() => toggleDocumento(d.id, d.activo)} title={d.activo ? (lang === "en" ? "Deactivate" : "Desactivar") : (lang === "en" ? "Activate" : "Activar")}
-                        style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${d.activo ? DC.gold : "rgba(184,154,78,.2)"}`, background: d.activo ? DC.gold : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: d.activo ? DC.bg : DC.dim }}>
-                        {d.activo ? "✓" : "○"}
-                      </button>
+
                       {/* Ver contenido */}
                       <button onClick={() => setDocVerDoc(d)} title={lang === "en" ? "View content" : "Ver contenido"}
-                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".8rem", color: DC.dim }}>
-                        👁
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: DC.dim }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                       </button>
                       {/* Editar nombre */}
                       <button onClick={() => { setDocEditId(d.id); setDocEditNombre(d.nombre); }} title={lang === "en" ? "Edit name" : "Editar nombre"}
-                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".8rem", color: DC.dim }}>
-                        ✏️
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: DC.dim }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
                       {/* Borrar */}
                       <button onClick={() => setDocConfirmId(d.id)} title={lang === "en" ? "Delete" : "Borrar"}
-                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".8rem", color: DC.dim }}>
-                        🗑
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(184,154,78,.2)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: DC.dim }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                       </button>
                     </div>
                   </div>
