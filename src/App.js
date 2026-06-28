@@ -801,13 +801,15 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   const documentosActivos = documentos.filter(d => d.activo);
 
   function buildSystemPrompt() {
+    const fechaHoy = new Date().toLocaleDateString("es", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const contextoFecha = `Hoy es ${fechaHoy}. Cuando el usuario retome una conversación después de días o semanas, reconocé ese salto temporal y no actúes como si la conversación hubiera continuado sin interrupciones.`;
     const contextoDocumentos = documentosActivos.length > 0
       ? `\n\nDOCUMENTOS CARGADOS POR EL LÍDER:\n${documentosActivos.map(d => `--- ${d.nombre} ---\n${d.contenido.slice(0, 4000)}`).join("\n\n")}`
       : "";
     const contextoResumen = resumenConv
       ? `\n\nRESUMEN DE CONVERSACIONES ANTERIORES:\n${resumenConv}`
       : "";
-    return SYSTEM_PROMPT_INSIDE + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos + contextoResumen;
+    return SYSTEM_PROMPT_INSIDE + "\n\n" + contextoFecha + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos + contextoResumen;
   }
 
   async function generarResumen(mensajes) {
@@ -911,14 +913,7 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     setInput("");
     setStarted(true);
 
-    // Inyectar fecha en el primer mensaje del usuario (no en __INSIDE_START__)
-    const fechaHoy = new Date().toLocaleDateString("es-AR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    const horaHoy = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
-    const txtConFecha = msgs.length === 0 && txt !== "__INSIDE_START__"
-      ? `[${fechaHoy}, ${horaHoy}] ${txt}`
-      : txt;
-
-    const next = [...msgs, { role: "user", content: txtConFecha }];
+    const next = [...msgs, { role: "user", content: txt }];
     // Mantener solo los últimos 12 mensajes para la API
     const msgsParaAPI = next.slice(-12);
     setMsgs(next); setLoading(true);
