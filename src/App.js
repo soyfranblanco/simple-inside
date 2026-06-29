@@ -795,10 +795,12 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   const documentosActivos = documentos.filter(d => d.activo);
 
   function buildSystemPrompt() {
+    const fechaHoy = new Date().toLocaleDateString("es", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const contextoFecha = `Hoy es ${fechaHoy}. Cuando el usuario retome una conversación después de días o semanas, reconocé ese salto temporal y no actúes como si la conversación hubiera continuado sin interrupciones.`;
     const contextoDocumentos = documentosActivos.length > 0
       ? `\n\nDOCUMENTOS CARGADOS POR EL LÍDER:\n${documentosActivos.map(d => `--- ${d.nombre} ---\n${d.contenido.slice(0, 4000)}`).join("\n\n")}`
       : "";
-    return SYSTEM_PROMPT_INSIDE + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos;
+    return SYSTEM_PROMPT_INSIDE + "\n\n" + contextoFecha + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos;
   }
 
   async function guardarConv(mensajes) {
