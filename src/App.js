@@ -724,7 +724,6 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     : { bg: "#f5f0e8", gold: "#b89a4e", txt: "#1a1a1a", dim: "rgba(26,26,26,0.5)" };
   const [msgs, setMsgs] = useState([]);
   const [convId, setConvId] = useState(null);
-  const [resumenConv, setResumenConv] = useState("");
   const [documentos, setDocumentos] = useState([]);
   const [docNombre, setDocNombre] = useState("");
   const [docTexto, setDocTexto] = useState("");
@@ -780,40 +779,8 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
       try {
         const data = await apiConv({ action: "get", email: userEmail });
         if (Array.isArray(data) && data.length > 0 && data[0].mensajes?.length > 0) {
-          const todosLosMsgs = data[0].mensajes;
-          const convIdActual = data[0].id;
-          // Mostrar historial completo al usuario
-          setMsgs(todosLosMsgs);
-          setConvId(convIdActual);
-          // Cargar resumen si existe, o generarlo si hay suficiente historial
-          if (data[0].resumen) {
-            setResumenConv(data[0].resumen);
-          } else if (todosLosMsgs.length > 12) {
-            // Generar resumen en segundo plano sin bloquear la UI
-            setTimeout(async () => {
-              try {
-                const r = await fetch("/api/chat", {
-                  method: "POST", headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    model: "claude-sonnet-4-6",
-                    max_tokens: 600,
-                    system: "Generá un resumen estructurado de esta conversación de coaching. Capturá: temas importantes que surgieron, decisiones que la persona tomó o está evaluando, patrones de comportamiento detectados, contexto de vida compartido (trabajo, equipo, desafíos personales), e insights clave que emergieron. Sé conciso pero completo. En español, sin bullets, en párrafos cortos. Máximo 400 palabras.",
-                    messages: [{ role: "user", content: `Resumí esta conversación:\n\n${todosLosMsgs.map(m => `${m.role === "user" ? "PERSONA" : "INSIDE"}: ${m.content}`).join("\n\n")}` }]
-                  })
-                });
-                const d = await r.json();
-                const nuevoResumen = d?.content?.[0]?.text || "";
-                if (nuevoResumen) {
-                  setResumenConv(nuevoResumen);
-                  // Guardar el resumen en Supabase
-                  await fetch("/api/conversaciones_inside", {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "update", id: convIdActual, mensajes: todosLosMsgs, resumen: nuevoResumen })
-                  });
-                }
-              } catch {}
-            }, 1500);
-          }
+          setMsgs(data[0].mensajes);
+          setConvId(data[0].id);
           setStarted(true);
         }
       } catch {}
@@ -828,46 +795,18 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   const documentosActivos = documentos.filter(d => d.activo);
 
   function buildSystemPrompt() {
-    const fechaHoy = new Date().toLocaleDateString("es", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    const contextoFecha = `Hoy es ${fechaHoy}. Cuando el usuario retome una conversación después de días o semanas, reconocé ese salto temporal y no actúes como si la conversación hubiera continuado sin interrupciones.`;
     const contextoDocumentos = documentosActivos.length > 0
       ? `\n\nDOCUMENTOS CARGADOS POR EL LÍDER:\n${documentosActivos.map(d => `--- ${d.nombre} ---\n${d.contenido.slice(0, 4000)}`).join("\n\n")}`
       : "";
-    const contextoResumen = resumenConv
-      ? `\n\nRESUMEN DE CONVERSACIONES ANTERIORES:\n${resumenConv}`
-      : "";
-    return SYSTEM_PROMPT_INSIDE + "\n\n" + contextoFecha + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos + contextoResumen;
+    return SYSTEM_PROMPT_INSIDE + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos;
   }
 
-  async function generarResumen(mensajes) {
-    if (mensajes.length < 16) return; // Solo resumir si hay suficiente historial
+  async function guardarConv(mensajes) {
     try {
-      const r = await fetch("/api/chat", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 600,
-          system: "Sos un asistente que genera resúmenes estructurados de conversaciones de coaching. Tu resumen debe capturar: temas importantes que surgieron, decisiones que la persona tomó o está evaluando, patrones de comportamiento detectados, contexto de vida compartido (trabajo, equipo, desafíos), e insights clave que emergieron. El resumen debe ser conciso pero completo, en español, sin bullets — solo párrafos cortos. Máximo 400 palabras.",
-          messages: [{ role: "user", content: `Resumí esta conversación de coaching:\n\n${mensajes.slice(0, -12).map(m => `${m.role === "user" ? "PERSONA" : "INSIDE"}: ${m.content}`).join("\n\n")}` }]
-        })
-      });
-      const d = await r.json();
-      const nuevoResumen = d?.content?.[0]?.text || "";
-      if (nuevoResumen) {
-        setResumenConv(nuevoResumen);
-        return nuevoResumen;
-      }
-    } catch {}
-    return resumenConv;
-  }
-
-  async function guardarConv(mensajes, resumen) {
-    try {
-      const payload = resumen ? { mensajes, resumen } : { mensajes };
       if (convId) {
-        await apiConv({ action: "update", id: convId, ...payload });
+        await apiConv({ action: "update", id: convId, mensajes });
       } else {
-        const result = await apiConv({ action: "insert", email: userEmail, ...payload });
+        const result = await apiConv({ action: "insert", email: userEmail, mensajes });
         if (Array.isArray(result) && result[0]?.id) setConvId(result[0].id);
       }
     } catch {}
@@ -939,25 +878,14 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     if (!txt || loading) return;
     setInput("");
     setStarted(true);
-
     const next = [...msgs, { role: "user", content: txt }];
-    // Mantener solo los últimos 12 mensajes para la API
-    const msgsParaAPI = next.slice(-12);
     setMsgs(next); setLoading(true);
     try {
-      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, system: buildSystemPrompt(), messages: msgsParaAPI }) });
+      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, system: buildSystemPrompt(), messages: next }) });
       const d = await r.json();
-      const respuesta = d?.content?.[0]?.text || (lang === "en" ? "Error." : "Error.");
-      const finalMsgs = [...next, { role: "assistant", content: respuesta }];
+      const finalMsgs = [...next, { role: "assistant", content: d?.content?.[0]?.text || "Error." }];
       setMsgs(finalMsgs);
-
-      // Generar resumen si el historial creció suficiente
-      let resumenActual = resumenConv;
-      if (finalMsgs.length > 16 && finalMsgs.length % 8 === 0) {
-        resumenActual = await generarResumen(finalMsgs) || resumenConv;
-      }
-
-      await guardarConv(finalMsgs, resumenActual);
+      await guardarConv(finalMsgs);
     } catch { setMsgs([...next, { role: "assistant", content: lang === "en" ? "Connection error." : "Error de conexión." }]); }
     setLoading(false);
   }
