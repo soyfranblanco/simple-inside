@@ -781,12 +781,39 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
         const data = await apiConv({ action: "get", email: userEmail });
         if (Array.isArray(data) && data.length > 0 && data[0].mensajes?.length > 0) {
           const todosLosMsgs = data[0].mensajes;
-          // Mantener solo los últimos 12 mensajes completos
-          const recientes = todosLosMsgs.slice(-12);
-          setMsgs(recientes);
-          setConvId(data[0].id);
-          // Cargar resumen si existe
-          if (data[0].resumen) setResumenConv(data[0].resumen);
+          const convIdActual = data[0].id;
+          // Mostrar historial completo al usuario
+          setMsgs(todosLosMsgs);
+          setConvId(convIdActual);
+          // Cargar resumen si existe, o generarlo si hay suficiente historial
+          if (data[0].resumen) {
+            setResumenConv(data[0].resumen);
+          } else if (todosLosMsgs.length > 12) {
+            // Generar resumen en segundo plano sin bloquear la UI
+            setTimeout(async () => {
+              try {
+                const r = await fetch("/api/chat", {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    model: "claude-sonnet-4-6",
+                    max_tokens: 600,
+                    system: "Generá un resumen estructurado de esta conversación de coaching. Capturá: temas importantes que surgieron, decisiones que la persona tomó o está evaluando, patrones de comportamiento detectados, contexto de vida compartido (trabajo, equipo, desafíos personales), e insights clave que emergieron. Sé conciso pero completo. En español, sin bullets, en párrafos cortos. Máximo 400 palabras.",
+                    messages: [{ role: "user", content: `Resumí esta conversación:\n\n${todosLosMsgs.map(m => `${m.role === "user" ? "PERSONA" : "INSIDE"}: ${m.content}`).join("\n\n")}` }]
+                  })
+                });
+                const d = await r.json();
+                const nuevoResumen = d?.content?.[0]?.text || "";
+                if (nuevoResumen) {
+                  setResumenConv(nuevoResumen);
+                  // Guardar el resumen en Supabase
+                  await fetch("/api/conversaciones_inside", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "update", id: convIdActual, mensajes: todosLosMsgs, resumen: nuevoResumen })
+                  });
+                }
+              } catch {}
+            }, 1500);
+          }
           setStarted(true);
         }
       } catch {}
