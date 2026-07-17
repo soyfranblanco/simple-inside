@@ -122,24 +122,6 @@ Cuando no esté claro si la persona necesita ser escuchada, validada o desafiada
 No clasificás a la persona de antemano. Leés lo que trae y cuando hay ambigüedad, preguntás. Eso es más honesto que asumir.
 
 ═══════════════════════════════════════
-PROMOVER EL PENSAMIENTO CRÍTICO
-═══════════════════════════════════════
-No sos un espejo que solo valida. Cuando el razonamiento de la persona tiene un punto débil, una suposición sin chequear, o una conclusión que no se sostiene del todo, lo señalás — con respeto, pero sin suavizarlo hasta que pierda sentido.
-
-Tu trabajo no es darle la razón. Es ayudarla a pensar mejor. Eso a veces significa hacer la pregunta incómoda que nadie más le hace: "¿Eso que decís lo verificaste o es una suposición?", "¿Qué evidencia tenés de eso?", "¿Y si la explicación fuera otra?"
-
-═══════════════════════════════════════
-PROMOVER EL ENCUENTRO HUMANO
-═══════════════════════════════════════
-No fomentás que la persona se quede sola con vos. Sos un puente hacia vínculos reales, no un reemplazo de ellos. Cuando sea relevante, promovés que la persona se relacione con otros seres humanos — para pensar, para decidir, para no atravesar sola lo que está viviendo.
-
-Cómo se acerca a otros depende de su diseño — no es uniforme:
-- Proyector: lo natural es esperar ser invitado, no salir a buscar. Podés ayudarla a pensar cómo generar las condiciones para que la inviten, no a forzar el encuentro.
-- Manifestador: lo natural es iniciar el contacto directamente. Podés acompañarla a iniciar con claridad.
-- Generador: lo natural es responder a oportunidades de conexión que ya están ahí. Podés ayudarla a notar esas oportunidades.
-- Reflector: lo natural es que el vínculo correcto se revele con tiempo y en el lugar correcto. No la apurés a buscar.
-
-═══════════════════════════════════════
 LECTURA DE PATRONES
 ═══════════════════════════════════════
 Leés el historial como un observador. Tu trabajo es detectar y nombrar lo que la persona no puede ver desde adentro — siempre cruzando lo que aparece con lo que sabés de su diseño.
@@ -152,11 +134,6 @@ Cada característica del diseño tiene una expresión sana y una expresión de l
 
 PATRONES EMOCIONALES RECURRENTES:
 Cuando un tema emocional o de comportamiento aparece de forma recurrente, lo conectás con la estructura del diseño de esa persona y lo nombrás como información, no como problema: "Esto que aparece seguido tiene una explicación en cómo estás construido — no es un defecto, es parte de tu mecánica. Y también es algo que vale la pena explorar con alguien de confianza si querés ir más profundo."
-
-CONTRADICCIONES ENTRE LO QUE DICE Y LO QUE HACE:
-Cuando notes una diferencia entre lo que la persona dice que quiere o cree, y lo que sus acciones o decisiones reales muestran, lo nombrás — no como error, sino como inconsistencia a tener en cuenta. "Decís que priorizás X, pero las últimas decisiones que contaste van en otra dirección. ¿Qué está pasando ahí?"
-
-No es para corregir ni para señalar con el dedo. Es información que la persona puede no estar viendo desde adentro.
 
 EVOLUCIÓN REAL:
 Cuando algo mejoró genuinamente, lo nombrás: "La última vez que hablamos de esto estabas en un lugar muy distinto. Lo que describís ahora suena más alineado."
@@ -227,8 +204,6 @@ Usá exactamente este texto, adaptando el tono a la persona:
 Estoy diseñado para generar un espacio seguro donde puedas entenderte mejor — cómo tomás decisiones, qué te genera energía, qué te saca de eje. Todo lo que te diga está filtrado por tu diseño biológico único, no por fórmulas genéricas, y eso me hace diferente a cualquier otra IA.
 
 No soy un coach ni un terapeuta. Tampoco voy a decirte qué hacer. Me voy a ocupar de que veas con claridad las cosas antes de que tomes decisiones.
-
-Algo importante para que sepas desde ahora: no reemplazo el vínculo con otras personas, ni el acompañamiento profesional cuando algo lo necesita. Voy a ser honesto cuando algo esté fuera de lo que puedo ayudarte a resolver.
 
 Lo que hablemos acá es tuyo. Solo vos tenés acceso a esta conversación.
 
@@ -398,7 +373,40 @@ function Register({ go, lang, setLang }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [showTyC, setShowTyC] = useState(false);
+  const [registroLibre, setRegistroLibre] = useState(null);
+  const [codigo, setCodigo] = useState("");
+  const [codigoValido, setCodigoValido] = useState(false);
+  const [codigoLoading, setCodigoLoading] = useState(false);
   const u = (k, v) => setF(p => ({ ...p, [k]: v }));
+
+  React.useEffect(() => {
+    fetch("/api/codigos_inside", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "check-config" })
+    }).then(r => r.json()).then(d => {
+      setRegistroLibre(d.registro_libre ?? false);
+    }).catch(() => setRegistroLibre(false));
+  }, []);
+
+  async function verificarCodigo() {
+    if (!codigo.trim()) return;
+    setCodigoLoading(true);
+    try {
+      const r = await fetch("/api/codigos_inside", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verificar", codigo: codigo.trim() })
+      });
+      const d = await r.json();
+      if (d.valido) {
+        setCodigoValido(true);
+        setErr("");
+      } else {
+        setCodigoValido(false);
+        setErr(d.motivo || (lang === "en" ? "Invalid code." : "Código inválido."));
+      }
+    } catch { setErr(lang === "en" ? "Connection error." : "Error de conexión."); }
+    setCodigoLoading(false);
+  }
 
   function calcularEdad(fecha) {
     if (!fecha) return null;
@@ -413,6 +421,7 @@ function Register({ go, lang, setLang }) {
   function okStep1() {
     if (!f.nom || !f.ape || !f.email || !f.pass) { setErr(lang === "en" ? "Please fill all fields." : "Completá todos los campos."); return; }
     if (!f.tyc) { setErr(lang === "en" ? "Please accept the terms and conditions." : "Aceptá los términos y condiciones para continuar."); return; }
+    if (!registroLibre && !codigoValido) { setErr(lang === "en" ? "Please enter a valid access code." : "Ingresá un código de acceso válido."); return; }
     setErr(""); setStep(2);
   }
 
@@ -438,6 +447,13 @@ function Register({ go, lang, setLang }) {
         setLoading(false); return;
       }
       await apiUsuarios({ action: "insert", fields: { email: f.email.toLowerCase().trim(), nombre: f.nom, apellido: f.ape, password_hash: f.pass, diseno } });
+      // Marcar código como usado
+      if (!registroLibre && codigo.trim()) {
+        await fetch("/api/codigos_inside", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "usar", codigo: codigo.trim() })
+        }).catch(() => {});
+      }
       go("pending", f.email.toLowerCase().trim());
     } catch (e) { setErr("Error: " + (e?.message || "No se pudo conectar.")); }
     setLoading(false);
@@ -523,6 +539,23 @@ function Register({ go, lang, setLang }) {
               <input style={inp} type="email" placeholder="tu@email.com" value={f.email} onChange={e => u("email", e.target.value)} />
               <label style={lbl}>{lang === "en" ? "Password" : "Contraseña"} *</label>
               <Eye value={f.pass} onChange={e => u("pass", e.target.value)} placeholder={lang === "en" ? "Min. 6 characters" : "Mínimo 6 caracteres"} />
+              {!registroLibre && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={lbl}>{lang === "en" ? "Access code" : "Código de acceso"} *</label>
+                  <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
+                    <input
+                      value={codigo}
+                      onChange={e => { setCodigo(e.target.value.toUpperCase()); setCodigoValido(false); }}
+                      onBlur={verificarCodigo}
+                      placeholder={lang === "en" ? "Enter your code" : "Ingresá tu código"}
+                      style={{ ...inp, flex: 1, letterSpacing: ".15em", fontFamily: "monospace", textTransform: "uppercase" }}
+                    />
+                    {codigoValido && <span style={{ color: "#4caf50", fontSize: "1rem" }}>✓</span>}
+                    {codigoLoading && <span style={{ color: C.dim, fontSize: ".8rem" }}>...</span>}
+                  </div>
+                  {codigoValido && <div style={{ fontSize: ".65rem", color: "#4caf50", fontFamily: "monospace", marginTop: 4 }}>{lang === "en" ? "Valid code" : "Código válido"}</div>}
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "flex-start", gap: ".7rem", marginBottom: "1.2rem" }}>
                 <input type="checkbox" id="tyc" checked={f.tyc} onChange={e => u("tyc", e.target.checked)} style={{ marginTop: ".2rem", accentColor: C.gold, cursor: "pointer" }} />
                 <label htmlFor="tyc" style={{ fontFamily: NUNITO, fontSize: ".78rem", color: C.dim, lineHeight: 1.6, cursor: "pointer" }}>
