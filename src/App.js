@@ -373,7 +373,40 @@ function Register({ go, lang, setLang }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [showTyC, setShowTyC] = useState(false);
+  const [registroLibre, setRegistroLibre] = useState(null);
+  const [codigo, setCodigo] = useState("");
+  const [codigoValido, setCodigoValido] = useState(false);
+  const [codigoLoading, setCodigoLoading] = useState(false);
   const u = (k, v) => setF(p => ({ ...p, [k]: v }));
+
+  React.useEffect(() => {
+    fetch("/api/codigos_inside", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "check-config" })
+    }).then(r => r.json()).then(d => {
+      setRegistroLibre(d.registro_libre ?? false);
+    }).catch(() => setRegistroLibre(false));
+  }, []);
+
+  async function verificarCodigo() {
+    if (!codigo.trim()) return;
+    setCodigoLoading(true);
+    try {
+      const r = await fetch("/api/codigos_inside", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verificar", codigo: codigo.trim() })
+      });
+      const d = await r.json();
+      if (d.valido) {
+        setCodigoValido(true);
+        setErr("");
+      } else {
+        setCodigoValido(false);
+        setErr(d.motivo || (lang === "en" ? "Invalid code." : "Código inválido."));
+      }
+    } catch { setErr(lang === "en" ? "Connection error." : "Error de conexión."); }
+    setCodigoLoading(false);
+  }
 
   function calcularEdad(fecha) {
     if (!fecha) return null;
@@ -388,6 +421,7 @@ function Register({ go, lang, setLang }) {
   function okStep1() {
     if (!f.nom || !f.ape || !f.email || !f.pass) { setErr(lang === "en" ? "Please fill all fields." : "Completá todos los campos."); return; }
     if (!f.tyc) { setErr(lang === "en" ? "Please accept the terms and conditions." : "Aceptá los términos y condiciones para continuar."); return; }
+    if (!registroLibre && !codigoValido) { setErr(lang === "en" ? "Please enter a valid access code." : "Ingresá un código de acceso válido."); return; }
     setErr(""); setStep(2);
   }
 
@@ -413,6 +447,13 @@ function Register({ go, lang, setLang }) {
         setLoading(false); return;
       }
       await apiUsuarios({ action: "insert", fields: { email: f.email.toLowerCase().trim(), nombre: f.nom, apellido: f.ape, password_hash: f.pass, diseno } });
+      // Marcar código como usado
+      if (!registroLibre && codigo.trim()) {
+        await fetch("/api/codigos_inside", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "usar", codigo: codigo.trim() })
+        }).catch(() => {});
+      }
       go("pending", f.email.toLowerCase().trim());
     } catch (e) { setErr("Error: " + (e?.message || "No se pudo conectar.")); }
     setLoading(false);
@@ -498,6 +539,23 @@ function Register({ go, lang, setLang }) {
               <input style={inp} type="email" placeholder="tu@email.com" value={f.email} onChange={e => u("email", e.target.value)} />
               <label style={lbl}>{lang === "en" ? "Password" : "Contraseña"} *</label>
               <Eye value={f.pass} onChange={e => u("pass", e.target.value)} placeholder={lang === "en" ? "Min. 6 characters" : "Mínimo 6 caracteres"} />
+              {!registroLibre && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={lbl}>{lang === "en" ? "Access code" : "Código de acceso"} *</label>
+                  <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
+                    <input
+                      value={codigo}
+                      onChange={e => { setCodigo(e.target.value.toUpperCase()); setCodigoValido(false); }}
+                      onBlur={verificarCodigo}
+                      placeholder={lang === "en" ? "Enter your code" : "Ingresá tu código"}
+                      style={{ ...inp, flex: 1, letterSpacing: ".15em", fontFamily: "monospace", textTransform: "uppercase" }}
+                    />
+                    {codigoValido && <span style={{ color: "#4caf50", fontSize: "1rem" }}>✓</span>}
+                    {codigoLoading && <span style={{ color: C.dim, fontSize: ".8rem" }}>...</span>}
+                  </div>
+                  {codigoValido && <div style={{ fontSize: ".65rem", color: "#4caf50", fontFamily: "monospace", marginTop: 4 }}>{lang === "en" ? "Valid code" : "Código válido"}</div>}
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "flex-start", gap: ".7rem", marginBottom: "1.2rem" }}>
                 <input type="checkbox" id="tyc" checked={f.tyc} onChange={e => u("tyc", e.target.checked)} style={{ marginTop: ".2rem", accentColor: C.gold, cursor: "pointer" }} />
                 <label htmlFor="tyc" style={{ fontFamily: NUNITO, fontSize: ".78rem", color: C.dim, lineHeight: 1.6, cursor: "pointer" }}>
@@ -795,12 +853,10 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
   const documentosActivos = documentos.filter(d => d.activo);
 
   function buildSystemPrompt() {
-    const fechaHoy = new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    const contextoFecha = `Hoy es ${fechaHoy}. Los mensajes del usuario que empiezan con [fecha] indican cuándo fue enviado ese mensaje — usá esa información para detectar saltos temporales entre sesiones y reconocerlos naturalmente en la conversación.`;
     const contextoDocumentos = documentosActivos.length > 0
       ? `\n\nDOCUMENTOS CARGADOS POR EL LÍDER:\n${documentosActivos.map(d => `--- ${d.nombre} ---\n${d.contenido.slice(0, 4000)}`).join("\n\n")}`
       : "";
-    return SYSTEM_PROMPT_INSIDE + "\n\n" + contextoFecha + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos;
+    return SYSTEM_PROMPT_INSIDE + "\n\nDISEÑO DE LA PERSONA: " + JSON.stringify(user) + contextoDocumentos;
   }
 
   async function guardarConv(mensajes) {
@@ -880,19 +936,7 @@ function Chat({ go, userEmail, lang, setLang, dynamicUser }) {
     if (!txt || loading) return;
     setInput("");
     setStarted(true);
-
-    // Detectar si es el primer mensaje del día comparando con el último mensaje guardado
-    const ahora = new Date();
-    const fechaHoy = ahora.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    const ultimoMsgFecha = msgs.length > 0
-      ? msgs[msgs.length - 1]?._fecha
-      : null;
-    const esNuevoDia = !ultimoMsgFecha || ultimoMsgFecha !== ahora.toDateString();
-    const txtConFecha = (esNuevoDia && txt !== "__INSIDE_START__")
-      ? `[${fechaHoy}] ${txt}`
-      : txt;
-
-    const next = [...msgs, { role: "user", content: txtConFecha, _fecha: ahora.toDateString() }];
+    const next = [...msgs, { role: "user", content: txt }];
     setMsgs(next); setLoading(true);
     try {
       const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, system: buildSystemPrompt(), messages: next }) });
