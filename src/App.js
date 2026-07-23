@@ -412,7 +412,7 @@ function Register({ go, lang, setLang }) {
         setErr(authError.message.includes("already registered") ? (lang === "en" ? "That email is already registered." : "Ese email ya está registrado. Ingresá con tu contraseña.") : authError.message);
         setLoading(false); return;
       }
-      await apiUsuarios({ action: "insert", fields: { email: f.email.toLowerCase().trim(), nombre: f.nom, apellido: f.ape, password_hash: f.pass, diseno } });
+      await apiUsuarios({ action: "insert", fields: { email: f.email.toLowerCase().trim(), nombre: f.nom, apellido: f.ape, password_hash: f.pass, diseno, ...((!registroLibre && codigo.trim()) ? { codigo_acceso: codigo.trim().toUpperCase() } : {}) } });
       go("pending", f.email.toLowerCase().trim());
     } catch (e) { setErr("Error: " + (e?.message || "No se pudo conectar.")); }
     setLoading(false);
